@@ -514,8 +514,9 @@ class Gates:
                 task['goal'] = MARKER.sub('', str(task.get('goal', ''))) + '\n[shadow-army:' + nonce + ']'
                 if duty == 'verify':
                     task['goal'] += f'\nVerify card {key.card_id} on board {key.board} in repository {repo}. Run exactly: {cfg["check"] or "(no check configured)"}. Use terminal directly with workdir set to {repo}, then call army_verdict directly for this card.'
-                    if evidence['weakened'] or evidence.get('skipped') or evidence.get('tests_ran'):
-                        task['goal'] += '\n' + assertions.summary(evidence) + ' (advisory; review intent): ' + json.dumps(evidence)
+                    description = assertions.summary(evidence)
+                    if description:
+                        task['goal'] += '\n' + description + ' (advisory; review intent): ' + json.dumps(evidence)
                     if task.get('toolsets'):
                         task['toolsets'] = list(dict.fromkeys([*task['toolsets'], 'shadow-army', 'terminal']))
             except Exception as exc:

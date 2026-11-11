@@ -241,6 +241,9 @@ def snapshot(real, demo=False):
                 builder={k: boards.clean(builder.get(k)) for k in ('family', 'model')} if builder else None,
                 verifier=dict(family=boards.clean(verifier.get('family')), model=boards.clean(verifier.get('response_model') or verifier.get('model'))) if verifier else None),
             shadows=shadows, history=public_history))
+    open_code = any(c['state'] not in ('done', 'archived') and c['gate']['state'] != 'UNGATED' for c in cards)
+    if not open_code and not cfg['repo']:
+        setup[0].update(ok=True, hint='Give the next code card a Git workspace when you open it.')
     from .policy import git
     if trial:
         repositories.add(str(trial.repo))
@@ -253,6 +256,8 @@ def snapshot(real, demo=False):
             break
         except (ValueError, OSError):
             pass
+    if not open_code:
+        setup[0]['hint'] = 'No open code card. ' + setup[0]['hint']
     with gates.store.read() as db:
         selftest = gates.store.get(db, 'setup', 'selftest')
     return dict(setup_actions=setup_actions, selftest=selftest, schema_version=2, rev=rev, observed_at=dt.datetime.now(dt.timezone.utc).isoformat(), demo=demo,

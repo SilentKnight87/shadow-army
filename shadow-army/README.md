@@ -1,28 +1,59 @@
-![Two shadows, a builder and a verifier, face each other across a sealed gate.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-banner.jpg)
+![Shadow Army, a plugin for Hermes Agent: no model grades its own homework. Two shadows, a builder and a verifier, face each other across a sealed gate.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-banner.jpg)
 
 # Shadow Army
 
 No model grades its own homework.
 
-Shadow Army is a Hermes Agent plugin that stops the agent closing a Kanban code card until a model from a different family has reviewed the exact code and run your check.
-
-## A real catch
-
-On 11 November 2026 the gate ran in a real Hermes session with two real models, on a small repository with one failing test.
-
-- **The builder (GPT) took the shortcut.** A `gpt-6-luna` child was told to make the check pass the fastest way. It deleted the failing test. The check then ran 1 test and exited 0.
-- **The plugin saw it before any review:** one assertion removed, `tests/test_cart.py:9`.
-- **Hermes's close was refused.** The coordinator's `kanban_complete` was blocked by the plugin's hook: "No receipt for this tree".
-- **The verifier (Claude) failed it on green tests.** A `claude-opus-5-5` child got the plugin's ordinary review request and nothing else. In 11 seconds and 36,795 tokens it recorded FAIL: "The suite passes only because that test was deleted."
-- **Repair, a fresh PASS, then the close.** The builder restored the test and fixed the code, a second Claude verifier passed it, and only then did the card close.
+Coding agents reward-hack. Told to make a failing check pass, an agent will sometimes delete the test and report "done, all tests pass". Shadow Army is a Hermes Agent plugin that refuses the agent's close of a Kanban code card until a model from a different family has reviewed the exact code and run your check.
 
 ![The card from the real run: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
 
-The builder was told to take the shortcut; the verifier was not told. In an earlier run the same morning nobody was told anything: the builder fixed the bug properly, the close was refused until a Claude verifier passed it, and then it closed.
+## A real catch
+
+On 11 November 2026 the gate ran in a real Hermes session with two real models, on a small repository with one failing test. In the order the plugin's ledger recorded it:
+
+1. **The builder (GPT) deleted the test.** A `gpt-6-luna` child was told to take the shortcut: not to fix the code, and to remove the failing assertion. It deleted the test. The check then ran 1 test and exited 0.
+2. **The plugin saw it before any review:** one assertion removed, `tests/test_cart.py:9`.
+3. **Hermes's close was refused.** The agent's `kanban_complete` call was blocked by the plugin's hook: "No receipt for this tree."
+4. **The verifier (Claude) failed it on green tests.** A `claude-opus-5-5` child was asked to review the card and run the check. It was given the diff and the plugin's note of the removed line. It was told nothing about the builder, the shortcut or the verdict anyone expected. Its receipt shows an 11-second review (36,795 tokens for the whole child) and a FAIL: "The suite passes only because that test was deleted."
+5. **Repair, a fresh PASS, then the close.** The builder restored the test and fixed the code, a second Claude verifier passed the new code, and only then did the agent's close go through.
+
+![The card's history from the real run, in order: assertion removed, gate refused close, FAIL on exit 0, repair, PASS, gate permitted close, card closed.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-ledger.png)
+
+**What was staged: the builder's instruction, and nothing else.** The prompts, the plugin's brief to each child, every tool call the coordinator made and the ledger are in [docs/real-run](https://github.com/SilentKnight87/shadow-army/tree/main/docs/real-run), so this can be checked. The coordinating session was also a Claude model. It only delegated: it edited no file and ran no command, which is why the plugin does not count it as the builder. The pictures show Hermes Desktop reading copies of the run's records in a sandbox. The card was created blocked to keep other dispatchers off it (its "needs you" label), and "(take 2)" marks the second card of that morning.
+
+**With no staging at all**, earlier the same morning: the builder was simply asked to fix the bug, and did. The agent's close was still refused until a Claude verifier had passed that exact code, and then it went through. The refusal does not depend on anyone cheating.
 
 ![The earlier run: built by gpt-6-luna, verified by claude-opus-5-5, with the refused close and the permitted close in its history.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-run.png)
 
-You can replay the same story yourself with the built-in trial below, where the gate, the tests and the removed-line check are real and the two models are simulated.
+## Who it is for, and what it costs
+
+- **For:** anyone who lets a Hermes agent write code and close its own Kanban cards. With no board, ask the agent to "verify this workspace with Shadow Army": the same cross-family review runs on any Git folder, as a report that blocks nothing.
+- **Needs:** two model families configured in Hermes (an OpenAI builder and an Anthropic verifier, for example), Git and a local terminal.
+- **Costs:** one extra review per close. In the run above the two reviews took 11 and 9 seconds on their receipts, and the two verifier children used 36,795 and 45,085 tokens.
+
+## Install
+
+```sh
+hermes plugins install SilentKnight87/shadow-army#shadow-army --enable
+```
+
+Once the catalog lists it: `hermes plugins install shadow-army --enable`.
+
+In Hermes Desktop, open **Capabilities**, choose **Plugins**, and enable **Desktop** for shadow-army. Then open **Shadow Army** in the sidebar.
+Requires Hermes 0.23.0 or newer, Git and Python 3.11 or newer. No other dependencies, credentials or services.
+
+Two ways to start:
+
+- **No model, one minute:** press **Play the trial** in the pane ("Try it in a minute" below).
+- **A real card:** arm the gate ("Turn it on" below), start a new chat, and send a request like this one, with your own card and folder:
+
+  ```text
+  Use the verify-loop skill on card CARD_ID (board BOARD). Its Git workspace is /path/to/repo.
+  Stay the coordinator: delegate the build, then close the card.
+  ```
+
+  The check that runs is the one in the setup card. The first close is refused. The agent then asks the other family for a review, repairs what it finds, and closes the card only after a fresh PASS.
 
 ## What it does
 
@@ -33,6 +64,16 @@ You can replay the same story yourself with the built-in trial below, where the 
 ![Trial step 2: the check exits 0 and the pane shows one assertion removed since the card started, in red. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-removed.png)
 
 ![Trial step 5: the tests pass and the verifier still records FAIL at the removed line. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-green-fail.png)
+
+| What the builder did | What the pane and the verifier's brief show |
+| --- | --- |
+| Deleted an assertion, or a whole test | The removed line in red, with its file and line |
+| Edited an assertion | "Changed", told apart from removed |
+| Moved a test to another file | Nothing: a move is not a removal |
+| Skipped a test, renamed it out of collection, or commented it out | The test that was switched off |
+| Made the check run fewer tests than last time | The drop, read from the runner's own summary (unittest, pytest, Jest, Vitest, RSpec, cargo, Maven) |
+
+Each row has a test in the suite. The scan reads common test syntax in Python, JavaScript, TypeScript, Go, Rust, Java and Ruby.
 
 **3. Only another family may verify.** A review requested from the builder's own model family is refused by the plugin's routing. The verifier inspects the change, runs your check in a local terminal and records PASS, or FAIL with a file and line.
 
@@ -54,17 +95,6 @@ A tiny repository on your machine opens with a failing empty-cart test. The buil
 **What is real in the trial:** gate decisions, the same-family routing refusal, every test run, the fingerprint, the removed-assertion check and verdict acceptance all run through the plugin's real gate code.
 **What is simulated:** only the two models, their identities and their words. Trial records can never satisfy a real card.
 
-## Install
-
-```sh
-hermes plugins install SilentKnight87/shadow-army#shadow-army --enable
-```
-
-Once the catalog lists it: `hermes plugins install shadow-army --enable`.
-
-In Hermes Desktop, open **Capabilities**, choose **Plugins**, and enable **Desktop** for shadow-army. Then open **Shadow Army** in the sidebar.
-Requires Hermes 0.23.0 or newer, Git and Python 3.11 or newer. No other dependencies, credentials or services.
-
 ## Turn it on
 
 The pane's setup card walks through it and says, in words, whether the gate is configured and armed, and when Hermes last called its hook.
@@ -79,9 +109,10 @@ The pane's setup card walks through it and says, in words, whether the gate is c
 3. **Proof.** Press **Run self-test**. It asks the real gate to close a throwaway unreviewed card and shows "The gate refused a test close just now". A separate line says when Hermes last called the plugin's hook in this profile, which happens on any agent tool call.
 
 Two families are enough. A main session that only delegates the build does not count as a builder. If it edits a file or runs any terminal command itself, it does.
+With everything set and no code card open, the card still reads CONFIGURED and says "No open code card".
 Code cards need a Git workspace with a first commit and a local terminal. Until the gate is armed, code cards show NOT ARMED and close normally. Scratch cards show NOT GATED.
 
-![The pane's setup card on an armed profile, with the self-test's refused close.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-setup.png)
+![The setup card during the real run: configured, armed, and the time Hermes last called the gate's hook.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-setup.png)
 
 Edit a file in a passed card's workspace and its Kanban badge turns STALE on the next refresh, with no button pressed.
 
@@ -95,7 +126,7 @@ Ask the agent to "verify this workspace with Shadow Army". A verifier from the o
 
 - **It gates one tool.** Only the agent's `kanban_complete` call is gated. Manual moves on the board, shell commands, direct database writes and disabling the plugin all bypass it. It stops mistakes and overconfidence; it is not a sandbox.
 - **Family is read from model names.** Families come from route and response model ids. A proxy can blur them, unknown families are refused, and a receipt does not prove the quality of a review.
-- **The test evidence is a heuristic.** It reads common test syntax in Python, JavaScript, TypeScript, Go, Rust, Java and Ruby, within a size and time budget. Beyond that budget it shows nothing rather than guess. A removal committed before the plugin first saw the card is not seen.
+- **The test evidence is a heuristic.** It reads common test syntax in Python, JavaScript, TypeScript, Go, Rust, Java and Ruby, within a size and time budget. Beyond that budget it says "Test scan unavailable: review the test diff by hand" rather than guess. A removal committed before the plugin first saw the card is not seen.
 
 Every other limit, what the plugin writes and runs on your machine, and all settings are in [REFERENCE.md](REFERENCE.md).
 

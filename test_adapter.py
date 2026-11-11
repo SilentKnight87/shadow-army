@@ -80,7 +80,9 @@ class AdapterTests(unittest.TestCase):
         data = api.snapshot()
         self.assertEqual(data['cards'], [])
         self.assertEqual(len(data['setup']), 8)
-        self.assertFalse(any(s['ok'] for s in data['setup'] if s['id'] in ('repo', 'verifier')))
+        self.assertTrue(next(s for s in data['setup'] if s['id'] == 'repo')['ok'])
+        self.assertFalse(next(s for s in data['setup'] if s['id'] == 'verifier')['ok'])
+        self.assertIn('No open code card.', data['setup'][0]['hint'])
 
 
 if __name__ == '__main__':

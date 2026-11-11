@@ -103,3 +103,20 @@ class AdvisoryResilienceTests(unittest.TestCase):
             self.assertEqual(len(jsrows), 3)
             self.assertIn('.toBe(0)', jsrows[1]['text'])
             self.assertEqual(len([r for r in rows if r['file'] == rust.name]), 1)
+
+    def test_unavailable_scan_is_explicit_in_verifier_brief_and_pane_data(self):
+        message = 'Test scan unavailable: review the test diff by hand'
+        for inventory in (None, []):
+            with self.subTest(inventory=inventory):
+                module.ASSERTION_CACHE.clear()
+                with patch.object(module.assertions, 'inventory', return_value=inventory):
+                    task = self.gates.prepare([dict(card='card', duty='verify')], 'parent')[0]
+                    gate = self.card()['gate']
+                if inventory is None:
+                    self.assertIn(message, task['goal'])
+                    self.assertIsNone(gate['weakened_count'])
+                    self.assertIsNone(gate['skipped_count'])
+                else:
+                    self.assertNotIn(message, task['goal'])
+                    self.assertEqual(gate['weakened_count'], 0)
+                    self.assertEqual(gate['skipped_count'], 0)

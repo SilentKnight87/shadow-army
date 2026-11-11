@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406413.413385,
+      "kind": "arose",
+      "duty": "build",
+      "family": "openai",
+      "model": "gpt-6-luna",
+      "verdict": null,
+      "finding": null,
+      "tree": "773fd3ffcacd6ee29b8fc1372ff358416c911c66441bc7d9ed90176dc4982611",
+      "check": null
+    }
+  },
+  {
+    "id": 2,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406430.242204,
+      "kind": "finished",
+      "duty": "build",
+      "family": "openai",
+      "model": "gpt-6-luna",
+      "verdict": null,
+      "finding": null,
+      "tree": "773fd3ffcacd6ee29b8fc1372ff358416c911c66441bc7d9ed90176dc4982611",
+      "check": null,
+      "weakened": [],
+      "weakened_count": 0,
+      "changed_count": 0
+    }
+  },
+  {
+    "id": 3,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406432.3774168,
+      "kind": "close_refused",
+      "duty": null,
+      "family": null,
+      "model": null,
+      "verdict": null,
+      "finding": "No receipt for this tree.",
+      "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+      "check": null,
+      "gate": {
+        "state": "UNVERIFIED",
+        "reason": "No receipt for this tree.",
+        "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55"
+      }
+    }
+  },
+  {
+    "id": 4,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406455.023078,
+      "kind": "arose",
+      "duty": "verify",
+      "family": "anthropic",
+      "model": "claude-opus-5-5[1m]",
+      "verdict": null,
+      "finding": null,
+      "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+      "check": null
+    }
+  },
+  {
+    "id": 5,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406463.995153,
+      "kind": "verdict",
+      "duty": "verify",
+      "family": "anthropic",
+      "model": "claude-opus-5-5[1m]",
+      "verdict": "PASS",
+      "finding": null,
+      "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+      "check": {
+        "command": "python3 -m unittest discover -s tests -v",
+        "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+        "foreground": true,
+        "local": true,
+        "repo_cwd": true,
+        "observed_at": 1794406460.7992818,
+        "nonce": "544454c6da00463b8f90bfdd6e42be98",
+        "end_tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+        "changed_paths": [],
+        "exit_code": 0,
+        "output_excerpt": "test_empty_cart (test_cart.CartTests) ... ok\ntest_one_item (test_cart.CartTests) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK"
+      },
+      "findings": [],
+      "check_passed_but_failed": false,
+      "accepted_removed": false,
+      "elapsed_s": 8,
+      "tokens": 25308,
+      "simulated": false,
+      "receipt_id": "544454c6da00463b8f90bfdd6e42be98",
+      "weakened": [],
+      "weakened_count": 0,
+      "changed_count": 0
+    }
+  },
+  {
+    "id": 6,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406502.9990542,
+      "kind": "close_permitted",
+      "duty": null,
+      "family": null,
+      "model": null,
+      "verdict": null,
+      "finding": "Fresh independent PASS with evidence for this tree and check.",
+      "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+      "check": null,
+      "gate": {
+        "state": "PASS",
+        "reason": "Fresh independent PASS with evidence for this tree and check.",
+        "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55"
+      }
+    }
+  },
+  {
+    "id": 7,
+    "ns": "real",
+    "board": "shadow-army-live-proof",
+    "card": "t_d0d154b5",
+    "data": {
+      "at": 1794406503.0253062,
+      "kind": "closed",
+      "duty": null,
+      "family": null,
+      "model": null,
+      "verdict": null,
+      "finding": "Host reported successful completion for this card.",
+      "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55",
+      "check": null,
+      "gate": {
+        "state": "PASS",
+        "reason": "Fresh independent PASS with evidence for this tree and check.",
+        "tree": "cfaa54925809e538bfe1315c8b98a3fa9287fb6fea7043bd2cf1636a56406e55"
+      },
+      "gate_at_close": "PASS"
+    }
+  }
+]

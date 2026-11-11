@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from hermes_cli.config import DEFAULT_CONFIG
 from test_adapter import api
@@ -90,3 +91,26 @@ class SetupBuilderRouteTests(unittest.TestCase):
             self.assertFalse(item['ok'])
             self.assertFalse(actions['can_arm'])
             self.assertEqual(actions['routes'], [])
+
+    def test_closed_code_card_does_not_unconfigure_profile(self):
+        self.host['model'] = dict(provider='anthropic', default='claude-test')
+        self.host['delegation'].update(backend='shadow-army', provider='openai-codex', model='gpt-6-luna')
+        row = dict(id='closed', board='default', title='Code', status='done')
+        with patch.object(api.boards, 'cards', return_value=([row], [])), patch.object(
+                self.gates, 'inspect', return_value=dict(state='PASS', repo=None, tree=None, reason='Closed')):
+            snapshot = api.projection.snapshot(self.gates)
+        self.assertTrue(snapshot['armed'])
+        required = [r for r in snapshot['setup'] if r['id'] not in ('hook', 'hermes_version')]
+        self.assertTrue(all(r['ok'] for r in required), required)
+        self.assertIn('No open code card.', snapshot['setup'][0]['hint'])
+        self.assertEqual(self.host['delegation']['model'], 'gpt-6-luna')
+        self.assertTrue(next(r for r in required if r['id'] == 'families')['ok'])
+        for repo, verifier in ((str(Path(self.temp.name) / 'missing'), self.cfg['verifier']),
+                               (None, dict(provider='openai', model='gpt-test'))):
+            with self.subTest(repo=repo, verifier=verifier):
+                self.cfg.update(repo=repo, verifier=verifier)
+                with patch.object(api.boards, 'cards', return_value=([], [])):
+                    broken = api.projection.snapshot(self.gates)
+                failures = [r for r in broken['setup'] if not r['ok'] and r['id'] not in ('hook', 'hermes_version')]
+                self.assertTrue(failures)
+                self.assertTrue(all(r['hint'] for r in failures))

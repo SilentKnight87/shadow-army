@@ -1312,10 +1312,11 @@ function DiffLine({ w, sign, said, className }) {
 // Removed lines read as a diff: file and line, then the text with a leading minus. A PASS that accepted them says so
 // quietly, in grey. Changed lines are not a finding: one neutral line, folded until asked for. Tests switched off
 // follow, in the same family.
+const scanUnavailable = row => row?.weakened_count === null || row?.skipped_count === null
 function Removed({ row }) {
   const removed = removedOf(row), changed = changedOf(row)
   const count = removedCount(row), edits = changedCount(row)
-  const skipped = jsx(Skipped, { row }, 'skipped')
+  const skipped = [scanUnavailable(row) && jsx('p', { className: 'sa-hint', children: 'Test scan unavailable: review the test diff by hand' }, 'scan-unavailable'), jsx(Skipped, { row }, 'skipped')]
   if (!count && !edits) return skipped
   const accepted = row?.accepted_removed === true && count > 0
   const since = sinceOf(removed)
@@ -1375,7 +1376,7 @@ function Changed({ rows, count }) {
 }
 const hasLost = row => removedCount(row) > 0 || changedCount(row) > 0
 // Any advisory evidence on a row: assertions removed or changed, tests switched off, or fewer tests run.
-const hasAdvice = row => hasLost(row) || skippedCount(row) > 0 || Boolean(dropOf(row))
+const hasAdvice = row => scanUnavailable(row) || hasLost(row) || skippedCount(row) > 0 || Boolean(dropOf(row))
 
 function Check({ check, removed, drop }) {
   if (!check || !check.command) return [removed || null, drop && jsx(Ran, { drop, line: true }, 'ran')]
@@ -1428,7 +1429,7 @@ function VerdictRow({ card, row, now, compact, quiet }) {
   const verdict = builder ? (row.kind === 'arose' ? 'START' : 'BUILDER') : str(row.verdict).toUpperCase()
   const old = olderTree(card, row)
   const meta = jsxs('span', { className: 'meta', children: [
-    row.tree && jsx('span', { className: 'sa-hash', children: str(row.tree) }),
+    row.tree && jsx('span', { className: 'sa-hash', children: `${row.kind === 'finished' ? 'started from code version ' : ''}${str(row.tree)}` }),
     jsx('span', { children: ago(now - (seconds(row.at) ?? now)) }),
     row.family && jsx(Family, { id: row.family }),
     row.model && jsx('span', { className: 'sa-model', children: str(row.model) }),
@@ -1647,6 +1648,7 @@ function HeroSide({ card, now, moment, found, onOpen, onCopy }) {
   // The gate's own advisory, shown above the evidence for each kind no evidence row carries: assertions removed or
   // changed, tests switched off.
   const extra = {
+    ...(scanUnavailable(gate) && !scanUnavailable(side.latest) ? { weakened_count: gate.weakened_count, skipped_count: gate.skipped_count } : {}),
     ...(hasLost(gate) && !hasLost(side.latest) ? { weakened: gate.weakened, weakened_count: gate.weakened_count, changed_count: gate.changed_count } : {}),
     ...(skippedCount(gate) > 0 && !skippedCount(side.latest) ? { skipped: gate.skipped, skipped_count: gate.skipped_count } : {})
   }
@@ -1795,7 +1797,7 @@ function RailEvent({ card, row, now }) {
   const text = row.kind === 'arose' ? `${duty} started.${said}`
     : row.kind === 'finished' ? `${duty} finished.${said}`
     : `${human(row.kind) || 'Event'}${row.finding ? `: ${row.finding}` : ''}`
-  const version = ['arose', 'finished'].includes(row.kind) && row.tree && jsx('div', { className: 'sa-model', children: `code version ${row.tree}` })
+  const version = ['arose', 'finished'].includes(row.kind) && row.tree && jsx('div', { className: 'sa-model', children: `${row.kind === 'finished' ? 'started from ' : ''}code version ${row.tree}` })
   // The builder's own check run, with any assertions it removed, is evidence too.
   const run = ['arose', 'finished'].includes(row.kind) && (row.check?.command || hasAdvice(row)) && jsx(Check, { check: row.check, removed: jsx(Removed, { row }), drop: dropOf(row) })
   return jsxs('li', { className: 'sa-ev', 'data-kind': row.kind, children: [when, jsxs('div', { className: 'body', children: [who, jsx('div', { className: 'txt', children: text }), version, run] })] })
@@ -2074,7 +2076,7 @@ function Setup({ snap, feed, open, onToggle, route }) {
   const toggle = jsx('button', { type: 'button', className: 'sa-link', 'aria-expanded': String(open), 'aria-controls': 'sa-setup-body', onClick: onToggle, children: open ? 'Hide' : 'Show' })
   if (!open) {
     // Folded, the line says whether the gate is configured and armed; the hook observation is in the open card.
-    return jsxs('section', { className: 'sa-setup-line', id: 'sa-setup', 'aria-label': 'Setup', children: [jsx('span', { className: 'sa-label', children: 'Setup' }), jsx(Stages, { snap }), toggle] })
+    return jsxs('section', { className: 'sa-setup-line', id: 'sa-setup', 'aria-label': 'Setup', children: [jsx('span', { className: 'sa-label', children: 'Setup' }), jsx(Stages, { snap }), !list(snap?.cards).some(c => !['done', 'archived'].includes(c.state) && c.gate?.state !== 'UNGATED') && jsx('span', { className: 'sa-hint', children: 'No open code card.' }), toggle] })
   }
   return jsxs('section', { className: 'sa-panel', id: 'sa-setup', 'aria-labelledby': 'sa-setup-h', children: [
     jsxs('div', { className: 'sa-panel-head', children: [

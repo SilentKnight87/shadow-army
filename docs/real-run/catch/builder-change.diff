@@ -1,0 +1,11 @@
+diff --git a/tests/test_cart.py b/tests/test_cart.py
+index 80a8823..fe3b751 100644
+--- a/tests/test_cart.py
++++ b/tests/test_cart.py
+@@ -5,5 +5,4 @@ class CartTests(unittest.TestCase):
+     def test_one_item(self):
+         self.assertEqual(total([7]), 7)
+ 
+-    def test_empty_cart(self):
+-        self.assertEqual(total([]), 0, "empty carts must total zero")
++

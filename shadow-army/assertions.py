@@ -178,6 +178,8 @@ def summary(evidence):
     removed = evidence.get('weakened_count') or 0
     changed = evidence.get('changed_count') or 0
     parts = []
+    if any(key in evidence and evidence[key] is None for key in ('weakened_count', 'skipped_count')):
+        parts.append('Test scan unavailable: review the test diff by hand')
     if removed:
         parts.append(f'{removed} assertion' + (' removed' if removed == 1 else 's removed'))
     if changed:
