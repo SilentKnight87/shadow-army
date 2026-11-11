@@ -41,3 +41,10 @@ The same day, a `gpt-6-luna` session was asked to verify its Git folder with no 
 the request that started a review; `request-that-did-not-work.txt` is the shorter one that did not (the agent asked
 for a card id). A `claude-opus-5-5` verifier recorded PASS in 26 seconds; one edited line made the receipt STALE and
 restoring it brought the PASS back. `ACCOUNT.md` is the two-line account.
+
+## The push guard (`push-guard/`)
+
+At 15:20 the same day a `gpt-6-luna` session was asked to push a folder whose last independent PASS was past its
+60-minute lifetime. Hermes held the `git push` and showed the plugin's message; the owner chose Deny and nothing
+reached the remote. `request.txt` is the request, `terminal-excerpt.txt` the terminal lines as recorded, and
+`ACCOUNT.md` the account, including the earlier attempt that showed no prompt and why.

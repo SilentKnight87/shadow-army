@@ -1,0 +1,24 @@
+# Terminal lines as recorded, 11 November 2026 (EST). Left column: wall clock and seconds since the session started.
+# Spinner redraws and the status bar are left out; a stray digit at the start of two lines is spinner residue. Nothing else is changed.
+[15:20:06.850 +   7.166s] 💻 $ git status --short + 3 commands  0.2s
+[15:20:09.322 +   9.638s] 8╭───────────────────────────────────────────────────────────────╮
+[15:20:09.322 +   9.638s] │ ⚠️  Dangerous Command                                         │
+[15:20:09.322 +   9.638s] │                                                               │
+[15:20:09.322 +   9.638s] │ <terminal> (plugin approval rule)                             │
+[15:20:09.322 +   9.638s] │                                                               │
+[15:20:09.322 +   9.638s] │ ❯ 1. Allow once                                               │
+[15:20:09.322 +   9.638s] │   2. Allow for this session                                   │
+[15:20:09.322 +   9.638s] │   3. Add to permanent allowlist                               │
+[15:20:09.323 +   9.639s] │   4. Deny                                                     │
+[15:20:09.323 +   9.639s] │                                                               │
+[15:20:09.323 +   9.639s] │ Shadow Army: this code has no fresh independent PASS (STALE). │
+[15:20:09.323 +   9.639s] │  Approve to push anyway, or first ask the agent: "Use the     │
+[15:20:09.323 +   9.639s] │ verify-loop skill to verify this workspace with Shadow Army." │
+[15:20:09.323 +   9.639s] ╰───────────────────────────────────────────────────────────────╯
+[15:20:09.323 +   9.639s]   ↑/↓ to select, Enter to confirm  (299s)
+[15:20:17.759 +  18.074s]   1. Allow once
+[15:20:17.759 +  18.074s] ❯ 4. Deny
+[15:20:28.243 +  28.558s] ⚠ Approval: <terminal> (plugin approval rule) → denied
+[15:20:29.409 +  29.724s] ☤ Hermes
+[15:20:30.340 +  30.655s] 9The push to proof-local was blocked because consent was denied. I did not retry or change any files; cart.py remains modified and uncommitted.
+[15:20:30.499 +  30.815s] ─ 28.1s · ran 1 command · 3:20 PM
