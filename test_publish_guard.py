@@ -83,6 +83,7 @@ class PublishDecisionTests(unittest.TestCase):
         self.assertEqual(result['action'], 'approve')
         self.assertEqual(result['rule_key'], 'shadow-army:publish-unreviewed')
         self.assertIn('(UNVERIFIED)', result['message'])
+        self.assertIn('Use the verify-loop skill to verify this workspace with Shadow Army.', result['message'])
         self.assertFalse(self.gates.store.path.exists())
 
     def test_unarmed_setting_off_or_malformed_passes_through(self):

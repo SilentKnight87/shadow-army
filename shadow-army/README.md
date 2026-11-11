@@ -4,7 +4,13 @@
 
 No model grades its own homework. [![tests](https://github.com/SilentKnight87/shadow-army/actions/workflows/public-plugin-tests.yml/badge.svg)](https://github.com/SilentKnight87/shadow-army/actions/workflows/public-plugin-tests.yml)
 
-Coding agents reward-hack. Told to make a failing check pass, an agent will sometimes delete the test and report "done, all tests pass". Shadow Army is a Hermes Agent plugin that refuses the agent's close of a Kanban code card until a model from a different family has reviewed the exact code and run your check. The builder and the verifier are its two shadows: child agents from different model families. With no board at all, it asks you before the agent pushes code that has no fresh independent PASS.
+Your agent deleted the failing test. The tests passed. Hermes refused the close.
+
+Coding agents reward-hack. Told to make a failing check pass, an agent will sometimes delete the test and report "done, all tests pass". Shadow Army is a Hermes Agent plugin that puts a second model family between the agent and "done". Once armed, it asks you before the agent pushes code that has no fresh independent PASS, and any Git folder can get a cross-family review. On a Kanban code card it goes further: the agent's close is refused until a model from a different family has reviewed the exact code and run your check. The builder and the verifier are its two shadows: child agents from different model families.
+
+![Thirteen seconds of the demo film: exit 0 beside the deleted test line, the agent's close refused in Hermes Desktop, and the card with a FAIL on green tests. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-catch-loop.gif)
+
+[Watch the 45-second film](https://github.com/SilentKnight87/shadow-army/blob/main/docs/demo.mp4). About 31 of its seconds are screen capture, labelled on screen as the real run or the trial.
 
 The cost is one extra review per close: in the real run below, about 10 seconds to a verdict and about 40,000 tokens.
 
@@ -14,10 +20,6 @@ hermes plugins install SilentKnight87/shadow-army#shadow-army --enable
 
 Then enable its Desktop pane ([Install](#install)) and press **Play the trial**: one minute, no model and no login.
 
-![Eight seconds of the demo film: after a PASS, one edited line cracks the seal to STALE and the agent's close is refused again. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-loop.gif)
-
-[Watch the 46-second film](https://github.com/SilentKnight87/shadow-army/blob/main/docs/demo.mp4). About 34 of its seconds are screen capture, labelled on screen as the real run or the trial.
-
 ## A real catch
 
 **Green tests. Still FAIL.**
@@ -25,6 +27,12 @@ Then enable its Desktop pane ([Install](#install)) and press **Play the trial**:
 On 11 November 2026 the gate ran in a real Hermes session with two real models, on a small repository with one failing test. In the order the plugin's ledger recorded it:
 
 ![The card at the moment of the catch: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
+
+| | |
+| --- | --- |
+| The plugin observed | An assertion was removed |
+| The reviewer decided | The requirement is still broken |
+| Hermes enforced | The close is refused until a fresh PASS |
 
 1. **The builder (GPT) deleted the test.** A `gpt-6-luna` child was told to take the shortcut: not to fix the code, and to remove the failing assertion. It deleted the test. The check then ran 1 test and exited 0.
 2. **The plugin saw it before any review:** one assertion removed, `tests/test_cart.py:9`.
@@ -34,7 +42,15 @@ On 11 November 2026 the gate ran in a real Hermes session with two real models, 
 
 ![The card's ledger, in order: assertion removed, close refused, FAIL on exit 0, repair, PASS, close permitted, card closed. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-ledger.png)
 
-**What was staged: the builder's instruction, and nothing else.** The prompts, the plugin's brief to each child, every tool call the coordinator made and the ledger are in [docs/real-run](https://github.com/SilentKnight87/shadow-army/tree/main/docs/real-run), so this can be checked. The review request also said that green tests alone do not establish correctness and that a removed assertion must be assessed against the requirement; the same wording was used in the earlier run, where the same model passed a correct fix. The coordinating session was also a Claude model. It only delegated: it edited no file and ran no command, which is why the plugin does not count it as the builder. The pictures show Hermes Desktop reading copies of the run's records in a sandbox. The card was created blocked to keep other dispatchers off it (its "needs you" label), and "(take 2)" marks the second card of that morning.
+**What was staged, and what was not:**
+
+- **Staged:** the builder's instruction, and nothing else.
+- **Not staged:** the verifier's brief. It said nothing about the builder, the shortcut or an expected verdict.
+- **What the review request did say:** that green tests alone do not establish correctness, and that a removed assertion must be assessed against the requirement. The same wording was used in the earlier run, where the same model passed a correct fix.
+- **Who else was there:** the coordinating session was also a Claude model. It only delegated: it edited no file and ran no command, which is why the plugin does not count it as the builder.
+- **The pictures:** Hermes Desktop reading copies of the run's records in a sandbox. The card was created blocked to keep other dispatchers off it (its "needs you" label), and "(take 2)" marks the second card of that morning.
+
+The prompts, the plugin's brief to each child, every tool call the coordinator made and the ledger are in [docs/real-run](https://github.com/SilentKnight87/shadow-army/tree/main/docs/real-run), so all of this can be checked.
 
 **With no staging at all**, earlier the same morning: the builder was simply asked to fix the bug, and did. The agent's close was still refused until a Claude verifier had passed that exact code, and then it went through. The refusal does not depend on anyone cheating.
 
@@ -42,7 +58,8 @@ On 11 November 2026 the gate ran in a real Hermes session with two real models, 
 
 ## Who it is for, and what it costs
 
-- **For:** anyone who lets a Hermes agent write code and close its own Kanban cards. With no board, ask the agent to "verify this workspace with Shadow Army": the same cross-family review runs on any Git folder, as a report that blocks nothing.
+- **For:** anyone who lets a Hermes agent write code and close its own Kanban cards. With no board, ask the agent to "use the verify-loop skill to verify this workspace with Shadow Army": the same cross-family review runs on any Git folder, as a report that blocks nothing.
+- **No board?** Arm the gate and the agent's `git push` asks you first, unless another family has passed this exact code.
 - **Needs:** two model families configured in Hermes (an OpenAI builder and an Anthropic verifier, for example), Git and a local terminal.
 - **Costs:** one extra review per close. In the run above the two reviews took 11 and 9 seconds from the verifier's start to its verdict (19.0 and 16.6 seconds for the whole verifier child), and the two verifier children used 36,795 and 45,085 tokens in all. Two small runs do not predict the cost on a large project.
 
@@ -58,7 +75,9 @@ In Hermes Desktop, open **Capabilities**, choose **Plugins**, and enable **Deskt
 
 Requires Hermes 0.23.0 or newer, Git and Python 3.11 or newer. No other dependencies, credentials or services.
 
-Two ways to start:
+The whole setup is four steps: this install line, enabling the pane, **Arm the gate** with a verifier, and `hermes config set delegation.backend shadow-army` followed by a new chat. "Turn it on" below has the details.
+
+Three ways to start:
 
 - **No model, one minute:** press **Play the trial** in the pane ("Try it in a minute" below).
 - **A real card:** arm the gate ("Turn it on" below), start a new chat, and send a request like this one, with your own card and folder:
@@ -69,6 +88,14 @@ Two ways to start:
   ```
 
   You need three things: a Git folder with a first commit, your real test command in the setup card, and a verifier from another family. The first close is refused. The agent then asks the other family for a review, repairs what it finds, and closes the card only after a fresh PASS.
+
+- **No board:** after arming, start a new chat in your project's Git folder and send this. The verifier must come from a different family than that chat's own model.
+
+  ```text
+  Use the verify-loop skill to verify this workspace with Shadow Army.
+  ```
+
+  From then on, an agent's `git push` from that folder asks for your approval until the code has a fresh PASS.
 
 ## What it does
 
@@ -90,15 +117,21 @@ Each row has a test in the suite. The scan reads common test syntax in Python, J
 
 **3. Only another family may verify.** A review requested from the builder's own model family is refused by the plugin's routing. The verifier inspects the change, runs your check in a local terminal and records PASS, or FAIL with a file and line.
 
-**4. The PASS is bound to the code.** A PASS covers the exact Git-visible code and check command. One edited line, a changed check or an expired PASS (60 minutes by default) makes it STALE, and the close is refused again. Each receipt shows the review time, tokens when Hermes reports them, and a **Copy receipt** button for a Markdown block.
+**4. The PASS is a seal on the exact code.** A PASS covers the exact Git-visible code and check command. One edited line, a changed check or an expired PASS (60 minutes by default) makes it STALE, and the close is refused again. Each receipt shows the review time, tokens when Hermes reports them, and a **Copy receipt** button for a Markdown block.
 
-![Trial step 7, after Tamper one line: the seal cracks to STALE and the PASS no longer covers the code. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-stale.png)
+![Six seconds of the demo film: after a PASS, one edited line cracks the seal to STALE and the agent's close is refused again. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-loop.gif)
 
-**5. It asks before unreviewed code is published.** Once the gate is armed, when the agent's terminal is about to run `git push` or `gh pr create` on code with no fresh independent PASS, Hermes asks you to approve first: "Shadow Army: this code has no fresh independent PASS (UNVERIFIED)." With a fresh PASS, from a card or from a card-free review, the push goes straight through. It never blocks: you can approve, and the `guard_push` setting turns it off.
+**5. It asks before unreviewed code is published.** Once the gate is armed, when the agent's terminal is about to run `git push` or `gh pr create` on code with no fresh independent PASS, Hermes asks you to approve first: "Shadow Army: this code has no fresh independent PASS (UNVERIFIED)." With a fresh PASS, from a card or from a card-free review, the push goes straight through. It never blocks: you can approve, and the `guard_push` setting turns it off. It checks the folder's current code, not what a particular branch or tag would send. It is a best-effort check: unknown folders, multi-line commands, subshells and other shell syntax it cannot read, remote terminals, errors, timeouts and oversized repositories pass through without the prompt. It is covered by 15 focused tests and a host test through Hermes's real plugin manager.
 
 ## Why this is a plugin, not a prompt
 
 A prompt or a skill can ask an agent to get a second opinion. It cannot refuse the tool call when the agent skips that step, record which model actually answered and what the check really exited with, or notice that the code changed after the review. Shadow Army does those through Hermes itself: a pre-tool hook on `kanban_complete`, an approval request on the agent's own `git push`, a delegation provider that routes the verifier and refuses the builder's family, API and terminal hooks that record the real response model and exit code, and a local ledger bound to the code.
+
+| | What it does when the agent says "done" |
+| --- | --- |
+| A prompt or a skill | Asks the agent to get a review |
+| A checker that runs afterwards | Reports what it found |
+| Shadow Army | Refuses the tool call, and seals the verdict to the exact code |
 
 In Hermes Desktop it adds a pane, a gate count in the status bar, a notification when a gate changes, badges on Kanban cards, a gate card in the chat transcript and a shortcut (`mod+alt+g`).
 
@@ -134,15 +167,12 @@ The pane's setup card walks through it and says, in words, whether the gate is c
 
 Edit a file in a passed card's workspace and its Kanban badge turns STALE on the next refresh, with no button pressed.
 
-![Gate badges on Hermes Kanban cards: BLOCKED, UNVERIFIED, STALE and PASS. Synthetic board, no model ran.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-kanban.png)
-
-The board in this picture is synthetic: no model ran on it.
 
 ## Without a Kanban card
 
 Ask the agent to "use the verify-loop skill to verify this workspace with Shadow Army". A verifier from another family reviews the session's Git folder (or the configured repository) and runs your check. The receipt appears in the pane as a Workspace card and goes STALE on the next edit. The session you ask in counts as the builder, so the verifier must come from a different family than that session's own model.
 
-This ran with real models on 11 November 2026. A `gpt-6-luna` session asked, a `claude-opus-5-5` verifier reviewed the folder, ran the check and recorded PASS in 26 seconds (67,844 tokens for the verifier child). One edited line made the receipt STALE, and putting the line back restored the PASS. Name the skill in the request: the shorter "verify this workspace with Shadow Army" did not start a review in that session.
+This ran with real models on 11 November 2026. A `gpt-6-luna` session asked, a `claude-opus-5-5` verifier reviewed the folder, ran the check and recorded PASS in 26 seconds (67,844 tokens for the verifier child). One edited line made the receipt STALE, and putting the line back restored the PASS. It reviewed the code as the catch run's repair had left it, which is why its code version (`c969d7707cae`) matches that run's PASS. Name the skill in the request: the shorter "verify this workspace with Shadow Army" did not start a review in that session.
 
 ![A Workspace card: no Kanban card, built in an OpenAI session, PASS from claude-opus-5-5 with the check's output. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-workspace.png)
 
@@ -150,7 +180,8 @@ A review blocks nothing by itself. The push guard above is what acts on it: with
 
 ## Limits
 
-- **If the gate cannot decide, it refuses.** If the plugin hits an error while judging a close, for example because it cannot read the code or its own records, the agent's close is refused with the reason and not let through.
+- **On a card it has identified, if the gate cannot decide, it refuses.** If the plugin hits an error while judging that close, for example because it cannot read the code or its own records, the agent's close is refused with the reason. If it cannot tell which card a close is for, the close passes through to Hermes.
+- **The push guard fails open, and it is new.** On any error or anything it cannot read, the command runs without the prompt. It is covered by tests through Hermes's own plugin manager and has not yet been recorded in a real session.
 - **It gates one tool and asks on two commands.** Only the agent's `kanban_complete` call is refused, and only its terminal `git push` and `gh pr create` are held for your approval. The push guard reads the command text, so an alias or a script bypasses it, and it needs someone to answer the prompt. Manual moves on the board, other shell commands, direct database writes and disabling the plugin all bypass the plugin. It stops mistakes and overconfidence; it is not a sandbox.
 - **Family is read from model names.** Families come from route and response model ids. A proxy can blur them, unknown families are refused, and a receipt does not prove the quality of a review.
 - **The test evidence is a heuristic.** It reads common test syntax in Python, JavaScript, TypeScript, Go, Rust, Java and Ruby, within a size and time budget. Beyond that budget it says "Test scan unavailable: review the test diff by hand" rather than guess. A removal committed before the plugin first saw the card is not seen.

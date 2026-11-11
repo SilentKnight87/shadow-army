@@ -1,8 +1,10 @@
 ---
 name: verify-loop
-description: Build and independently verify a Kanban card before closing it.
+description: Build and independently verify a Kanban card before closing it, or verify this workspace (any Git folder, no card) with Shadow Army.
 ---
 
+0. No card? To verify this workspace with Shadow Army, delegate duty="verify" with no card and do not
+   look for one. The last paragraph says what the child reviews.
 1. Read army_gate(card, board). If UNKNOWN, follow its reason: restore the worktree, make
    a first commit, or commit or ignore the files it names, then retry. Give code cards a Git workspace.
    UNGATED and UNARMED cards close normally. A done or archived card needs no further review.

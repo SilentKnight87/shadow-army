@@ -154,4 +154,4 @@ def register_backend(ctx):
                        'Record a bound verifier verdict. PASS requires all observed families known and independent, unchanged tree/check, and the exact configured terminal check with exit 0. FAIL requires findings. ')
         ctx.register_tool(name, 'shadow-army', {'name': name, 'description': description + LIMITS,
             'parameters': {'type': 'object', 'properties': props, 'required': ['verdict', 'findings'] if name == 'army_verdict' else ['card']}}, handler)
-    ctx.register_skill('verify-loop', Path(__file__).parent / 'skills/verify-loop/SKILL.md', 'Build, independently verify, repair and close a card.')
+    ctx.register_skill('verify-loop', Path(__file__).parent / 'skills/verify-loop/SKILL.md', 'Build, independently verify, repair and close a card, or verify any Git workspace with Shadow Army when there is no card.')

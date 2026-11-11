@@ -771,7 +771,7 @@ class Gates:
             status = 'STALE' if 'STALE' in states else 'BLOCKED' if 'BLOCKED' in states else 'UNVERIFIED'
             return dict(action='approve', rule_key='shadow-army:publish-unreviewed', message=(
                 'Shadow Army: this code has no fresh independent PASS (' + status + '). '
-                'Approve to push anyway, or ask the agent to verify this workspace with Shadow Army first.'))
+                'Approve to push anyway, or first ask the agent: "Use the verify-loop skill to verify this workspace with Shadow Army."'))
         except Exception:
             return None
 
