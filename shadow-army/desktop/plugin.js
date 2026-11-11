@@ -444,8 +444,9 @@ const css = `
 .sa-emblem .fig { fill: var(--sa-violet) }
 .sa-head h1 { font: 800 16px/1.2 var(--sa-sans); letter-spacing: .2em; text-transform: uppercase; color: var(--sa-text); text-shadow: 0 0 14px rgb(102 207 255 / .55) }
 .sa-tag { font: 12px/1.4 var(--sa-mono); color: var(--sa-text-2); letter-spacing: .02em }
-.sa-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; color: var(--sa-muted); font-size: 12px; margin-top: -6px }
+.sa-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: flex-start; color: var(--sa-muted); font-size: 12px; margin-top: -6px }
 .sa-live { display: inline-flex; align-items: center; gap: 6px; color: var(--sa-text-2) }
+.sa-meta > span:not(.sa-live) { flex: 1 1 0; min-width: 9em }
 .sa-live i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--sa-sys); flex: none }
 .sa-live[data-status="live"] i { background: var(--sa-sys); box-shadow: 0 0 8px var(--sa-sys); animation: sa-pulse 2.4s ease-in-out infinite }
 .sa-live[data-status="offline"] i, .sa-live[data-status="incompatible"] i { border-color: var(--sa-muted) }
@@ -458,7 +459,7 @@ const css = `
 /* Buttons: dark glass; the primary one is lit from inside. */
 .sa-btn { position: relative; cursor: pointer; border: 1px solid var(--sa-line-2); background-color: var(--sa-raised); color: var(--sa-text); border-radius: 4px; padding: 5px 12px; font-size: 12.5px; line-height: 1.4; white-space: nowrap; transition: border-color .2s, box-shadow .2s, background-color .2s }
 .sa-btn:hover:not(:disabled) { border-color: var(--sa-sys); box-shadow: 0 0 14px -4px var(--sa-sys) }
-.sa-btn:disabled { cursor: default; opacity: .55 }
+.sa-btn:disabled { cursor: default; opacity: .42 }
 .sa-btn.primary { background-color: #6fd3ff; background-image: linear-gradient(180deg, #8adcff, #52b8ff); color: #03101f; border-color: #a6e6ff; font-weight: 700; box-shadow: 0 0 18px -4px rgb(102 207 255 / .8), inset 0 1px 0 rgb(255 255 255 / .5) }
 .sa-btn.primary:hover:not(:disabled) { box-shadow: 0 0 26px -2px rgb(102 207 255 / .95), inset 0 1px 0 rgb(255 255 255 / .6) }
 .sa-btn.quiet { background-color: transparent }
@@ -502,6 +503,7 @@ const css = `
 .sa-panel h3 { font: 700 11px/1.3 var(--sa-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--sa-sys); margin-top: 8px }
 .sa-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center }
 .sa-hint { color: var(--sa-muted); font-size: 12px }
+.sa-hint.sa-advisory { font: 11px/1.5 var(--sa-mono); color: var(--sa-text-2); border-left: 2px solid var(--sa-line-2); padding: 1px 0 1px 9px }
 .sa-checklist { display: flex; flex-direction: column; gap: 8px }
 .sa-checklist li { display: grid; grid-template-columns: 16px 1fr; gap: 10px; align-items: start; color: var(--sa-text-2) }
 .sa-box { width: 13px; height: 13px; margin-top: 3px; border: 1.5px solid var(--sa-muted); transform: rotate(45deg) scale(.86); position: relative }
@@ -513,7 +515,7 @@ const css = `
 .sa-key > span { display: inline-block; white-space: nowrap }
 .sa-panel-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between }
 .sa-panel-body { display: flex; flex-direction: column; gap: 10px }
-.sa-setup-line { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 7px 12px; color: var(--sa-text-2); font-size: 12.5px }
+.sa-setup-line { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 7px 12px; color: var(--sa-text-2); font-size: 12.5px }
 .sa-owner { font-size: 12px; color: var(--sa-muted) }
 .sa-errors { display: flex; flex-direction: column; gap: 2px; margin-top: 2px }
 .sa-panel .sa-errors { color: var(--sa-text) }
@@ -753,6 +755,7 @@ const css = `
 .sa-index-item:hover { background-color: rgb(122 162 255 / .07) }
 .sa-index-item[aria-current="true"] { background-color: var(--sa-raised); border-color: var(--sa-line-2); box-shadow: inset 2px 0 0 var(--sa-sys) }
 .sa-index-item .t { font-weight: 600; min-width: 0 }
+.sa-index-item > .sa-badge { align-self: start; margin-top: 1px }
 .sa-index-item .s { grid-column: 1 / -1; color: var(--sa-muted); font-size: 12px }
 .sa-ledger { min-width: 0; display: flex; flex-direction: column; gap: 12px }
 .sa-back { align-self: flex-start }
@@ -769,8 +772,8 @@ const css = `
 .sa-ev time, .sa-bar time { color: var(--sa-muted); font: 11px/1.6 var(--sa-mono); white-space: nowrap }
 .sa-ev .who { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center }
 .sa-ev .txt { color: var(--sa-text-2) }
-.sa-ev.verdict { padding: 10px; margin: 3px 0; border-radius: 2px; gap: 6px; border: 1px solid var(--sa-line) }
-.sa-ev.verdict::before { left: -20px; top: 16px }
+.sa-ev.verdict { padding: 10px; margin: 3px 0 3px -5px; border-radius: 2px; gap: 6px 10px; border: 1px solid var(--sa-line) }
+.sa-ev.verdict::before { left: -16px; top: 16px }
 .sa-ev.verdict .txt { color: var(--sa-text) }
 .sa-ev[data-v="FAIL"] { background-color: rgb(255 98 131 / .06); border-color: rgb(255 98 131 / .3) }
 .sa-ev[data-v="FAIL"]::before { border-color: var(--sa-fail); background-color: var(--sa-fail); box-shadow: 0 0 8px var(--sa-fail) }
@@ -964,6 +967,7 @@ const css = `
 /* v2.5: how many tests the check reported, read beside its exit code. A drop is amber; a plain count is grey. */
 .sa-ran { margin-left: auto; padding-left: 12px; font: 11px/1.4 var(--sa-mono); color: var(--sa-text-2); white-space: nowrap }
 .sa-exit + .sa-ran { margin-left: 0; border-left: 1px solid var(--sa-line) }
+.sa-check-cmd > .sa-ran { flex: 1 1 100%; margin-left: 0; padding-left: 0; border-left: 0 }
 .sa-ran[data-drop="true"] { color: var(--sa-warn); font-weight: 700 }
 .sa-check > .sa-ranline { display: block; padding: 6px 10px; border-top: 1px solid var(--sa-line) }
 .sa-side > .sa-ranline, .sa-body > .sa-ranline { display: block; padding: 6px 10px; border: 1px solid rgb(255 187 82 / .45); border-left-width: 2px; border-radius: 2px; white-space: normal }
@@ -1027,6 +1031,8 @@ li[data-ok="true"] > .sa-row-main .sa-value { border-color: rgb(69 232 178 / .35
   .sa-wrap { padding: 22px 26px 32px; gap: 18px }
   .sa-trial { margin: 0 -26px; padding: 12px 26px 10px }
   .sa-trial-top span.why { flex: 1 1 240px }
+  .sa-meta { align-items: center }
+  .sa-meta > span:not(.sa-live) { flex: 0 1 auto; min-width: 0 }
   .sa-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px }
   .sa-tile { grid-template-columns: 128px minmax(0, 1fr); gap: 18px; padding: 18px }
   .sa-tile.hero { grid-column: 1 / -1 }
@@ -1037,7 +1043,6 @@ li[data-ok="true"] > .sa-row-main .sa-value { border-color: rgb(69 232 178 / .35
   .sa-seal .h { font-size: 10px }
   .sa-title { font-size: 16px }
   .sa-ev { grid-template-columns: 64px minmax(0, 1fr) }
-  .sa-ev.verdict { grid-template-columns: 54px minmax(0, 1fr) }
   .sa-stage { grid-template-columns: auto minmax(0, 1fr); justify-items: start; align-items: center; text-align: left; column-gap: 48px; padding: 14px 0 0 }
   .sa-hero .sa-portal { width: clamp(250px, 31cqi, 370px); justify-self: center }
   .sa-pitch { align-items: flex-start }
@@ -1316,7 +1321,7 @@ const scanUnavailable = row => row?.weakened_count === null || row?.skipped_coun
 function Removed({ row }) {
   const removed = removedOf(row), changed = changedOf(row)
   const count = removedCount(row), edits = changedCount(row)
-  const skipped = [scanUnavailable(row) && jsx('p', { className: 'sa-hint', children: 'Test scan unavailable: review the test diff by hand' }, 'scan-unavailable'), jsx(Skipped, { row }, 'skipped')]
+  const skipped = [scanUnavailable(row) && jsx('p', { className: 'sa-hint sa-advisory', children: 'Test scan unavailable: review the test diff by hand' }, 'scan-unavailable'), jsx(Skipped, { row }, 'skipped')]
   if (!count && !edits) return skipped
   const accepted = row?.accepted_removed === true && count > 0
   const since = sinceOf(removed)

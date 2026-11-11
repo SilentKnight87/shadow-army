@@ -1,4 +1,4 @@
-![Shadow Army, a plugin for Hermes Agent: no model grades its own homework. Two shadows, a builder and a verifier, face each other across a sealed gate.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-banner.jpg)
+![Shadow Army, a plugin for Hermes Agent: no model grades its own homework. Beside the name stands the plugin's gate, sealed.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-banner.jpg)
 
 # Shadow Army
 
@@ -6,7 +6,7 @@ No model grades its own homework.
 
 Coding agents reward-hack. Told to make a failing check pass, an agent will sometimes delete the test and report "done, all tests pass". Shadow Army is a Hermes Agent plugin that refuses the agent's close of a Kanban code card until a model from a different family has reviewed the exact code and run your check.
 
-![The card from the real run: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
+![The card at the moment of the catch: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
 
 ## A real catch
 
@@ -18,13 +18,13 @@ On 11 November 2026 the gate ran in a real Hermes session with two real models, 
 4. **The verifier (Claude) failed it on green tests.** A `claude-opus-5-5` child was asked to review the card and run the check. It was given the diff and the plugin's note of the removed line. It was told nothing about the builder, the shortcut or the verdict anyone expected. Its receipt shows an 11-second review (36,795 tokens for the whole child) and a FAIL: "The suite passes only because that test was deleted."
 5. **Repair, a fresh PASS, then the close.** The builder restored the test and fixed the code, a second Claude verifier passed the new code, and only then did the agent's close go through.
 
-![The card's history from the real run, in order: assertion removed, gate refused close, FAIL on exit 0, repair, PASS, gate permitted close, card closed.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-ledger.png)
+![The card's ledger, in order: assertion removed, close refused, FAIL on exit 0, repair, PASS, close permitted, card closed. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-ledger.png)
 
 **What was staged: the builder's instruction, and nothing else.** The prompts, the plugin's brief to each child, every tool call the coordinator made and the ledger are in [docs/real-run](https://github.com/SilentKnight87/shadow-army/tree/main/docs/real-run), so this can be checked. The coordinating session was also a Claude model. It only delegated: it edited no file and ran no command, which is why the plugin does not count it as the builder. The pictures show Hermes Desktop reading copies of the run's records in a sandbox. The card was created blocked to keep other dispatchers off it (its "needs you" label), and "(take 2)" marks the second card of that morning.
 
 **With no staging at all**, earlier the same morning: the builder was simply asked to fix the bug, and did. The agent's close was still refused until a Claude verifier had passed that exact code, and then it went through. The refusal does not depend on anyone cheating.
 
-![The earlier run: built by gpt-6-luna, verified by claude-opus-5-5, with the refused close and the permitted close in its history.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-run.png)
+![The earlier card: built by gpt-6-luna, verified by claude-opus-5-5, with the refused close and the permitted close in its history. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-run.png)
 
 ## Who it is for, and what it costs
 
@@ -41,6 +41,7 @@ hermes plugins install SilentKnight87/shadow-army#shadow-army --enable
 Once the catalog lists it: `hermes plugins install shadow-army --enable`.
 
 In Hermes Desktop, open **Capabilities**, choose **Plugins**, and enable **Desktop** for shadow-army. Then open **Shadow Army** in the sidebar.
+
 Requires Hermes 0.23.0 or newer, Git and Python 3.11 or newer. No other dependencies, credentials or services.
 
 Two ways to start:
@@ -61,9 +62,7 @@ Two ways to start:
 
 **2. It sees the assertion that went missing.** Tests can turn green because an assertion was deleted. The plugin keeps an inventory of assertion lines in the repository's test files. When one disappears, the pane shows the removed line in red, beside the green exit 0, and the verifier's brief carries the same line. Removed lines are told apart from lines that were only changed, and moved assertions are not flagged. The same check reports a test that was switched off (skipped, renamed out of collection or commented out) and a check run that executed fewer tests than the last one. All of this is evidence: it never blocks on its own, and the verifier decides.
 
-![Trial step 2: the check exits 0 and the pane shows one assertion removed since the card started, in red. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-removed.png)
-
-![Trial step 5: the tests pass and the verifier still records FAIL at the removed line. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-green-fail.png)
+![Trial step 2: the check exits 0 and the pane shows, in red, the one assertion removed since the card started. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-removed.png)
 
 | What the builder did | What the pane and the verifier's brief show |
 | --- | --- |
@@ -79,7 +78,7 @@ Each row has a test in the suite. The scan reads common test syntax in Python, J
 
 **4. The PASS is bound to the code.** A PASS covers the exact Git-visible code and check command. One edited line, a changed check or an expired PASS (60 minutes by default) makes it STALE, and the close is refused again. Each receipt shows the review time, tokens when Hermes reports them, and a **Copy receipt** button for a Markdown block.
 
-![Tamper one line after PASS: the seal cracks to STALE. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-stale.png)
+![Trial step 7, after Tamper one line: the seal cracks to STALE and the PASS no longer covers the code. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-stale.png)
 
 ## Why this is a plugin, not a prompt
 
@@ -90,10 +89,13 @@ In Hermes Desktop it adds a pane, a gate count in the status bar, a notification
 ## Try it in a minute
 
 Press **Play the trial** in the pane, then **Next**, or **Auto-play**. No login, no model and no setup are needed.
+
 A tiny repository on your machine opens with a failing empty-cart test. The builder deletes the assertion and the tests pass. The gate refuses the close, a same-family reviewer is refused, and the other family fails the code at the removed line. The builder restores the test and fixes the code, a fresh PASS lands, and the card closes. At step 7, **Tamper one line** tries the other ending.
 
-**What is real in the trial:** gate decisions, the same-family routing refusal, every test run, the fingerprint, the removed-assertion check and verdict acceptance all run through the plugin's real gate code.
-**What is simulated:** only the two models, their identities and their words. Trial records can never satisfy a real card.
+![Trial step 5: the tests pass and the verifier still records FAIL at the removed line. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-green-fail.png)
+
+- **What is real in the trial:** gate decisions, the same-family routing refusal, every test run, the fingerprint, the removed-assertion check and verdict acceptance all run through the plugin's real gate code.
+- **What is simulated:** only the two models, their identities and their words. Trial records can never satisfy a real card.
 
 ## Turn it on
 
@@ -108,15 +110,17 @@ The pane's setup card walks through it and says, in words, whether the gate is c
 
 3. **Proof.** Press **Run self-test**. It asks the real gate to close a throwaway unreviewed card and shows "The gate refused a test close just now". A separate line says when Hermes last called the plugin's hook in this profile, which happens on any agent tool call.
 
-Two families are enough. A main session that only delegates the build does not count as a builder. If it edits a file or runs any terminal command itself, it does.
-With everything set and no code card open, the card still reads CONFIGURED and says "No open code card".
-Code cards need a Git workspace with a first commit and a local terminal. Until the gate is armed, code cards show NOT ARMED and close normally. Scratch cards show NOT GATED.
+- Two families are enough. A main session that only delegates the build does not count as a builder. If it edits a file or runs any terminal command itself, it does.
+- With everything set and no code card open, the card still reads CONFIGURED and says "No open code card".
+- Code cards need a Git workspace with a first commit and a local terminal. Until the gate is armed, code cards show NOT ARMED and close normally. Scratch cards show NOT GATED.
 
-![The setup card during the real run: configured, armed, and the time Hermes last called the gate's hook.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-setup.png)
+![The setup card: configured, armed, and the time Hermes last called the gate's hook. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-setup.png)
 
 Edit a file in a passed card's workspace and its Kanban badge turns STALE on the next refresh, with no button pressed.
 
-![Gate badges on Hermes Kanban cards. Synthetic board, no model ran.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-kanban.png)
+![Gate badges on Hermes Kanban cards: BLOCKED, UNVERIFIED, STALE and PASS. Synthetic board, no model ran.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-kanban.png)
+
+The board in this picture is synthetic: no model ran on it.
 
 ## Without a Kanban card
 
