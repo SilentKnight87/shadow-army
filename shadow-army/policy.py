@@ -131,7 +131,12 @@ def accept_verdict(binding, observations, builders, current_tree, command, check
 
 
 def git(repo, *args, cap=2 * 1024 * 1024, timeout=0.6, consume=None, ok_codes=(0,)):
-    env = dict(os.environ, LC_ALL='C', GIT_TERMINAL_PROMPT='0', GIT_OPTIONAL_LOCKS='0')
+    # Git runs inside repositories the agent works on, where configured filters and hooks can execute. It gets a
+    # minimal environment: nothing from Hermes's own, so no provider key or token reaches a child process.
+    env = {'PATH': os.environ.get('PATH') or os.defpath, 'LANG': 'C', 'LC_ALL': 'C',
+           'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0'}
+    if os.environ.get('HOME'):
+        env['HOME'] = os.environ['HOME']
     argv = ['git', '--no-optional-locks', '-c', 'core.fsmonitor=false', '-C', str(repo), *args]
     with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env) as proc:
         try:

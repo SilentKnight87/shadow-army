@@ -2037,6 +2037,7 @@ const firstOpen = snap => list(snap?.setup).find(item => item && item.ok !== tru
 // armed profile whose close was refused; the backend's message is shown as sent.
 function SelfTest({ snap, feed, test, setTest }) {
   const [error, setError] = useState('')
+  const here = useRef(null)
   const last = lastTest(snap, test)
   const busy = feed.get().pending === 'selftest'
   const run = async () => {
@@ -2056,11 +2057,12 @@ function SelfTest({ snap, feed, test, setTest }) {
   const rest = message.startsWith(head) ? message.slice(head.length).trim() : message
   const open = last && !last.armed ? firstOpen(snap) : null
   const goTo = () => {
-    const row = document.querySelector(`.sa-guide li[data-id="${CSS.escape(str(open?.id))}"]`)
+    // Look only inside this setup card (the checklist is the self-test's sibling), never across the document.
+    const row = here.current?.parentElement?.querySelector(`.sa-guide li[data-id="${CSS.escape(str(open?.id))}"]`)
     row?.scrollIntoView({ block: 'center' })
     ;(row?.querySelector('button:not([disabled]), select') || row)?.focus?.()
   }
-  return jsxs('div', { className: 'sa-selftest', 'data-ok': last ? String(proof) : undefined, 'data-armed': last ? String(last.armed) : undefined, children: [
+  return jsxs('div', { ref: here, className: 'sa-selftest', 'data-ok': last ? String(proof) : undefined, 'data-armed': last ? String(last.armed) : undefined, children: [
     jsx('button', { type: 'button', className: 'sa-btn', disabled: busy, onClick: () => void run(), children: busy ? 'Testing…' : 'Run self-test' }),
     jsxs('span', { role: 'status', className: 'sa-selftest-said', children: [
       error,

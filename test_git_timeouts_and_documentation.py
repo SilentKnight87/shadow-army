@@ -60,6 +60,34 @@ time.sleep(10)
         git(self.repo, 'add', 'app.txt')
 
 
+    def test_1_git_receives_a_minimal_environment(self):
+        real_git = shutil.which('git')
+        wrapper = self.repo.parent / 'git'
+        seen = self.repo.parent / 'git-env.jsonl'
+        wrapper.write_text("""#!""" + sys.executable + """
+import json, os, sys
+with open(""" + repr(str(seen)) + """, 'a') as log:
+    log.write(json.dumps(dict(os.environ)) + '\\n')
+os.execv(""" + repr(real_git) + """, ['git', *sys.argv[1:]])
+""")
+        wrapper.chmod(0o755)
+        secrets = {'OPENAI_API_KEY': 'synthetic-openai', 'ANTHROPIC_API_KEY': 'synthetic-anthropic',
+                   'HERMES_DASHBOARD_SESSION_TOKEN': 'synthetic-session', 'GIT_DIR': '/nonexistent',
+                   'GIT_CONFIG_GLOBAL': '/nonexistent', 'SSH_AUTH_SOCK': '/nonexistent'}
+        with patch.dict(os.environ, dict(secrets, PATH=str(wrapper.parent) + os.pathsep + os.environ['PATH'])):
+            parent = set(os.environ)
+            self.assertTrue(fingerprint(self.repo))
+        import json
+        calls = [json.loads(line) for line in seen.read_text().splitlines()]
+        self.assertTrue(calls)
+        allowed = {'PATH', 'HOME', 'LANG', 'LC_ALL', 'GIT_TERMINAL_PROMPT', 'GIT_OPTIONAL_LOCKS'}
+        for env in calls:
+            # macOS adds __CF_USER_TEXT_ENCODING to every process by itself; nothing passes it on.
+            self.assertEqual((set(env) & parent) - allowed - {'__CF_USER_TEXT_ENCODING'}, set())
+            self.assertFalse(set(secrets) & set(env))
+            self.assertFalse(set(secrets.values()) & set(env.values()))
+            self.assertEqual((env['LC_ALL'], env['GIT_TERMINAL_PROMPT'], env['GIT_OPTIONAL_LOCKS']), ('C', '0', '0'))
+
 class ConfigurationDocumentationTests(unittest.TestCase):
     def test_4_repo_is_only_explicit_opt_in(self):
         # The settings example lives in the reference page; the catalog page links to it.

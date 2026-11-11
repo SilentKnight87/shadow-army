@@ -49,11 +49,13 @@ class RepositoryAndSessionPolicyTests(unittest.TestCase):
                 self.assertIsNone(self.gates.close(self.key))
 
     def test_A_global_ignore_and_interpreter_caches_leave_identity_unchanged(self):
-        config = self.root / 'gitconfig'
+        # Git gets a minimal environment, so the owner's global settings reach it through HOME only.
+        home = self.root / 'home'
+        home.mkdir()
         excludes = self.root / 'global-ignore'
         excludes.write_text('globally-ignored\n')
-        config.write_text('[core]\n excludesFile = ' + str(excludes) + '\n')
-        with patch.dict(os.environ, GIT_CONFIG_GLOBAL=str(config)):
+        (home / '.gitconfig').write_text('[core]\n excludesFile = ' + str(excludes) + '\n')
+        with patch.dict(os.environ, HOME=str(home)):
             before = fingerprint(self.repo)
             (self.repo / 'globally-ignored').write_text('private')
             (self.repo / '__pycache__').mkdir()
