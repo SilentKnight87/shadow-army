@@ -10,7 +10,9 @@ The `test_*.py` files, `host_probe.py` and `verify_archive.py` test the plugin. 
 
 **A real catch:** on 11 November 2026 a `gpt-6-luna` builder, told to take the shortcut, deleted the failing test and the check went green. The plugin refused the close, and a `claude-opus-5-5` verifier that was told nothing about the builder failed it: "The suite passes only because that test was deleted." The receipts are in [the plugin's guide](shadow-army/README.md#a-real-catch) and the run's records in [docs/real-run](docs/real-run). Once armed, the plugin also asks before an agent pushes code that has no fresh independent PASS, with or without a Kanban board.
 
-**Demo film:** [docs/demo.mp4](docs/demo.mp4), 45 seconds, also [posted on X](https://x.com/i/status/2120624419194191878). About 31 of them are screen capture, labelled on screen as the real run or the built-in trial; the only art is the 3D gate.
+**Demo film:** [docs/demo.mp4](docs/demo.mp4), 45 seconds. About 31 of them are screen capture, labelled on screen as the real run or the built-in trial; the only art is the 3D gate.
+
+**Uncut demo:** one 63-second take of the built-in trial running in Hermes Desktop, with simulated models as labelled on screen: [docs/demo-uncut.mp4](docs/demo-uncut.mp4), also [posted on X](https://x.com/i/status/2120627547784245279).
 
 ![Thirteen seconds of the film: exit 0 beside the deleted test line, the agent's close refused, and the card with a FAIL on green tests (the real run)](docs/img/readme-catch-loop.gif)
 
