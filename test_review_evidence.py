@@ -71,6 +71,15 @@ class ReviewEvidenceTests(unittest.TestCase):
             event = next(row for row in card['history'] if row['kind'] == 'verdict')
             self.assertEqual(event['accepted_removed'], bool(removed))
 
+    def test_a_passed_card_is_not_told_to_verify_again(self):
+        before = self.gates.inspect(self.key)
+        self.assertIn('delegate_task(tasks=', before['next_step'])
+        self.prepare()
+        for _ in range(3):
+            passed = self.verdict() if _ == 0 else self.gates.inspect(self.key)
+            self.assertEqual(passed['state'], 'PASS')
+            self.assertEqual(passed['next_step'], '')
+
     def test_edit_in_one_file_never_marks_the_same_line_in_another(self):
         import sys
         assertions = sys.modules[Gates.__module__].assertions

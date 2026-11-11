@@ -16,7 +16,7 @@ if [[ ${SHADOW_TEST_SANDBOX:-} != 1 ]]; then
         XDG_CACHE_HOME="$sandbox/cache" XDG_CONFIG_HOME="$sandbox/config" \
         XDG_DATA_HOME="$sandbox/data" UV_CACHE_DIR="$sandbox/uv-cache" \
         TMPDIR="$sandbox/tmp" SHADOW_TEST_SANDBOX=1 SHADOW_TEST_ROOT="$sandbox" \
-        HERMES_SOURCE="${HERMES_SOURCE:-}" PYTHONDONTWRITEBYTECODE=1 \
+        HERMES_SOURCE="${HERMES_SOURCE:-}" PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=ignore::ResourceWarning \
         HERMES_DISABLE_LAZY_INSTALLS=1 GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 \
         NO_COLOR=1 CI=1 bash "$runner"
     exit $?

@@ -191,7 +191,7 @@ class Gates:
             else:
                 result.update(self.evidence(key, tree=tree))
         result.update(receipts=[{k: r[k] for k in ('verdict', 'tree', 'created_at', 'findings', 'synthetic')} for r in receipts],
-                      next_step='delegate_task(tasks=' + json.dumps([next_task]) + ')')
+                      next_step='' if result['state'] == 'PASS' else 'delegate_task(tasks=' + json.dumps([next_task]) + ')')
         return result
 
     def evidence(self, key, **kwargs):

@@ -6,26 +6,27 @@ No model grades its own homework.
 
 Shadow Army is a Hermes Agent plugin that stops the agent closing a Kanban code card until a model from a different family has reviewed the exact code and run your check.
 
-![The Shadow Army pane's first-run view in Hermes Desktop, with Play the trial.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-hero.png)
-
-## A real run
+## A real catch
 
 On 11 November 2026 the gate ran in a real Hermes session with two real models, on a small repository with one failing test.
 
-- **The builder was GPT.** A Claude Opus 5.5 session coordinated and handed the fix to a `gpt-6-luna` child, which changed one line.
-- **Hermes's close was refused.** When the coordinator called `kanban_complete`, the plugin's hook blocked it: "No receipt for this tree".
-- **The verifier was Claude.** A `claude-opus-5-5` child, a different family from the builder, read the diff, ran the check itself (exit 0, 2 tests) and recorded PASS in 8 seconds and 35,484 tokens.
-- **Only then did the card close.**
+- **The builder (GPT) took the shortcut.** A `gpt-6-luna` child was told to make the check pass the fastest way. It deleted the failing test. The check then ran 1 test and exited 0.
+- **The plugin saw it before any review:** one assertion removed, `tests/test_cart.py:9`.
+- **Hermes's close was refused.** The coordinator's `kanban_complete` was blocked by the plugin's hook: "No receipt for this tree".
+- **The verifier (Claude) failed it on green tests.** A `claude-opus-5-5` child got the plugin's ordinary review request and nothing else. In 11 seconds and 36,795 tokens it recorded FAIL: "The suite passes only because that test was deleted."
+- **Repair, a fresh PASS, then the close.** The builder restored the test and fixed the code, a second Claude verifier passed it, and only then did the card close.
 
-![The card from the real run: built by gpt-6-luna, verified by claude-opus-5-5, with the refused close and the permitted close in its history.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-run.png)
+![The card from the real run: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
 
-The builder fixed the bug properly in this run, so there was no deleted assertion to catch. That catch is shown by the built-in trial below, where the gate, the tests and the removed-line check are real and the two models are simulated.
+The builder was told to take the shortcut; the verifier was not told. In an earlier run the same morning nobody was told anything: the builder fixed the bug properly, the close was refused until a Claude verifier passed it, and then it closed.
+
+![The earlier run: built by gpt-6-luna, verified by claude-opus-5-5, with the refused close and the permitted close in its history.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-run.png)
+
+You can replay the same story yourself with the built-in trial below, where the gate, the tests and the removed-line check are real and the two models are simulated.
 
 ## What it does
 
 **1. Hermes refuses the close.** On an armed code card, the agent's `kanban_complete` call is blocked until there is a fresh PASS for this exact code. The refusal says why and what to do next.
-
-![Trial step 3: the gate refuses the close because this tree has no receipt. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-refused.png)
 
 **2. It sees the assertion that went missing.** Tests can turn green because an assertion was deleted. The plugin keeps an inventory of assertion lines in the repository's test files. When one disappears, the pane shows the removed line in red, beside the green exit 0, and the verifier's brief carries the same line. Removed lines are told apart from lines that were only changed, and moved assertions are not flagged. The same check reports a test that was switched off (skipped, renamed out of collection or commented out) and a check run that executed fewer tests than the last one. All of this is evidence: it never blocks on its own, and the verifier decides.
 
@@ -36,8 +37,6 @@ The builder fixed the bug properly in this run, so there was no deleted assertio
 **3. Only another family may verify.** A review requested from the builder's own model family is refused by the plugin's routing. The verifier inspects the change, runs your check in a local terminal and records PASS, or FAIL with a file and line.
 
 **4. The PASS is bound to the code.** A PASS covers the exact Git-visible code and check command. One edited line, a changed check or an expired PASS (60 minutes by default) makes it STALE, and the close is refused again. Each receipt shows the review time, tokens when Hermes reports them, and a **Copy receipt** button for a Markdown block.
-
-![Trial step 7: the restored test and fixed code earn a fresh PASS. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-pass.png)
 
 ![Tamper one line after PASS: the seal cracks to STALE. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-stale.png)
 
@@ -84,13 +83,9 @@ Code cards need a Git workspace with a first commit and a local terminal. Until 
 
 ![The pane's setup card on an armed profile, with the self-test's refused close.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-setup.png)
 
-![An armed board in the pane. Synthetic board, no model ran.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-board.png)
-
 Edit a file in a passed card's workspace and its Kanban badge turns STALE on the next refresh, with no button pressed.
 
 ![Gate badges on Hermes Kanban cards. Synthetic board, no model ran.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-kanban.png)
-
-![The pane at 440 px beside a chat, showing the trial. Simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-pane.png)
 
 ## Without a Kanban card
 
