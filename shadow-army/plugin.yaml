@@ -1,0 +1,44 @@
+name: shadow-army
+version: "0.4.0"
+requires_hermes: ">=0.23.0"
+description: Independent code-bound verification gate for Kanban completion
+license: MIT
+provides_tools: [army_gate, army_verdict]
+provides_hooks: [pre_tool_call, post_tool_call, subagent_start, subagent_stop, pre_api_request, post_api_request]
+provides_middleware: []
+requires_env: []
+capabilities: []
+config_schema:
+  verifier_route:
+    type: dict
+    label: Saved verifier route
+    description: Legacy JSON provider/model object; the verifier provider and model fields take precedence.
+  verifier_provider:
+    type: str
+    label: Verifier provider
+    description: An already configured provider from a different model family than the builder.
+  verifier_model:
+    type: str
+    label: Verifier model
+    description: An available model on that provider; unknown families are refused.
+  check:
+    type: str
+    default: python3 -m unittest discover -s tests
+    label: Check command
+    description: Exact command the reviewer must run successfully on the unchanged code before PASS.
+  pass_lifetime_minutes:
+    type: float
+    label: Pass lifetime in minutes
+    description: Positive number of minutes a PASS stays fresh; defaults to 60 unless max_age_s is configured.
+  repo:
+    type: str
+    label: Optional repository for non-code cards
+    description: "Warning: setting this Git repository gates scratch and other non-code cards too; leave unset to gate only code workspaces."
+  verifier_fallbacks:
+    type: list
+    label: Verifier fallback routes
+    description: JSON array of configured provider/model objects, tried in order for an independent family.
+  family_overrides:
+    type: dict
+    label: Model family overrides
+    description: JSON object mapping exact lower-case provider/model keys to known family names from policy.py.
