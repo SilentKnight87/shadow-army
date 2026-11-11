@@ -85,6 +85,8 @@ Known model families in `policy.py` are Anthropic, OpenAI, Google, xAI, Meta, Mi
 
 An optional verifier route list chooses the first eligible configured route. Once selected, its runtime fallback providers are disabled.
 
+The **Two families** setup item compares the configured delegation provider/model with the verifier, or the main model when no delegation route is configured. Both families must be known and unrelated. Its value names the builder (marked delegated when applicable) and verifier families. The pane offers already configured independent routes, including the main model when it qualifies. The main model can coordinate and verify as long as the main session only delegates and runs no terminal command or file edit itself. This setup guidance does not change gate decisions.
+
 Setting `delegation.backend: default` unarms completion gating.
 
 ## Which cards are gated

@@ -44,11 +44,23 @@ def flush_heartbeat(gates):
         gates.store.put(db, 'setup', 'hook', dict(at=seen))
 
 
-def builder_route(host):
+def main_route(host):
     model = host.get('model')
     if isinstance(model, str):
         return dict(provider=host.get('provider', ''), model=model)
-    return model if isinstance(model, dict) else {}
+    return dict(provider=model.get('provider', ''), model=model.get('default', model.get('model'))) if isinstance(model, dict) else {}
+
+
+def delegation_config(host):
+    value = host.get('delegation')
+    return value if isinstance(value, dict) else {}
+
+
+def builder_route(host):
+    route = delegation_config(host)
+    if all(isinstance(route.get(key), str) and route[key].strip() for key in ('provider', 'model')):
+        return route
+    return main_route(host)
 
 
 def ensure_context(gates):
@@ -60,12 +72,14 @@ def ensure_context(gates):
 def actions(gates, *, raw=False):
     host, cfg = gates.host_config(), gates.config()
     builder = builder_route(host)
-    builder_family = family(builder.get('provider'), builder.get('default', builder.get('model')), cfg['family_overrides'])
-    candidates = [host.get('delegation', {}), cfg.get('verifier') or {}]
+    builder_family = family(builder.get('provider'), builder.get('model'), cfg['family_overrides'])
+    delegation = delegation_config(host)
+    candidates = [main_route(host), delegation, cfg.get('verifier') or {}]
     candidates.extend(host.get('fallback_providers', [])[:24] if isinstance(host.get('fallback_providers'), list) else [])
-    fallbacks = host.get('delegation', {}).get('fallback_providers')
+    fallbacks = delegation.get('fallback_providers')
     candidates.extend(fallbacks[:24] if isinstance(fallbacks, list) else [])
-    options = host.get('delegation', {}).get('backends', {}).get('model_map') or {}
+    backends = delegation.get('backends')
+    options = backends.get('model_map') if isinstance(backends, dict) else {}
     options = options.get('options', []) if isinstance(options, dict) else []
     candidates.extend(options[:24] if isinstance(options, list) else [])
     routes, seen = [], set()
@@ -74,7 +88,9 @@ def actions(gates, *, raw=False):
             continue
         provider, model = route.get('provider'), route.get('model')
         f = family(provider, model, cfg['family_overrides'])
-        if not provider or not model or not builder_family or not f or related(f, builder_family) or (provider, model) in seen:
+        if not all(isinstance(value, str) and value.strip() for value in (provider, model)):
+            continue
+        if not builder_family or not f or related(f, builder_family) or (provider, model) in seen:
             continue
         seen.add((provider, model))
         routes.append(dict(provider=provider if raw else boards.clean(provider), model=model if raw else boards.clean(model), family=f,
@@ -87,7 +103,7 @@ def actions(gates, *, raw=False):
 
 def arm(gates, provider, model):
     if not any(r['provider'] == provider and r['model'] == model for r in actions(gates, raw=True)['routes']):
-        raise ValueError('Choose an already configured route independent of the profile main model.')
+        raise ValueError('Choose an already configured route independent of the configured builder.')
     ctx = contexts().get(str(gates.store.path.resolve()))
     if ctx is None:
         raise ValueError('Hermes has not loaded this plugin yet in this run. Send Hermes any message and arm again, or set the verifier in the settings form.')
@@ -116,9 +132,15 @@ def missing_host_contexts():
 def status(gates):
     cfg, host = gates.config(), gates.host_config()
     builder = builder_route(host)
-    b = family(builder.get('provider'), builder.get('default', builder.get('model')), cfg['family_overrides'])
+    b = family(builder.get('provider'), builder.get('model'), cfg['family_overrides'])
     verifier = cfg['verifier'] or {}
     v = family(verifier.get('provider'), verifier.get('model'), cfg['family_overrides'])
+    delegated = builder is delegation_config(host)
+    main = main_route(host)
+    m = family(main.get('provider'), main.get('model'), cfg['family_overrides'])
+    hint = 'The configured builder and verifier must have known independent families.'
+    if delegated and m and v and related(m, v):
+        hint = 'The main model can coordinate and verify as long as the main session only delegates and runs no terminal command or file edit itself.'
     with gates.store.read() as db:
         saved = gates.store.get(db, 'setup', 'hook') or {}
     stamp = HEARTBEATS.get(str(gates.store.path), saved.get('at'))
@@ -128,8 +150,8 @@ def status(gates):
                            hint='This Hermes version lacks expected session context names: ' + ', '.join(missing) +
                                 '. Update to a compatible Hermes version; terminal or board selection may use fallback context.')] if missing else [])
     return [dict(id='families', label='Two families', ok=bool(b and v and not related(b, v)),
-                 value=f'{b} builds, {v} verifies' if b and v else None,
-                 hint='The main model and verifier must have known independent families.'),
+                 value=f'{b} builds' + (' (delegated)' if delegated else '') + f', {v} verifies' if b and v else None,
+                 hint=hint),
             dict(id='hook', label='Gate hook', ok=seen is not None and seen < 24 * 60 * 60, seen_s=seen,
                  value=f'Seen {seen}s ago' if seen is not None else None,
                  hint='Run a tool in this profile to observe the real pre-tool hook.'),

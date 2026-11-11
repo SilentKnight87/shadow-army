@@ -1,3 +1,5 @@
+![Two shadows, a builder and a verifier, face each other across a sealed gate.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-banner.jpg)
+
 # Shadow Army
 
 No model grades its own homework.
@@ -5,6 +7,19 @@ No model grades its own homework.
 Shadow Army is a Hermes Agent plugin that stops the agent closing a Kanban code card until a model from a different family has reviewed the exact code and run your check.
 
 ![The Shadow Army pane's first-run view in Hermes Desktop, with Play the trial.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-hero.png)
+
+## A real run
+
+On 11 November 2026 the gate ran in a real Hermes session with two real models, on a small repository with one failing test.
+
+- **The builder was GPT.** A Claude Opus 5.5 session coordinated and handed the fix to a `gpt-6-luna` child, which changed one line.
+- **Hermes's close was refused.** When the coordinator called `kanban_complete`, the plugin's hook blocked it: "No receipt for this tree".
+- **The verifier was Claude.** A `claude-opus-5-5` child, a different family from the builder, read the diff, ran the check itself (exit 0, 2 tests) and recorded PASS in 8 seconds and 35,484 tokens.
+- **Only then did the card close.**
+
+![The card from the real run: built by gpt-6-luna, verified by claude-opus-5-5, with the refused close and the permitted close in its history.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-run.png)
+
+The builder fixed the bug properly in this run, so there was no deleted assertion to catch. That catch is shown by the built-in trial below, where the gate, the tests and the removed-line check are real and the two models are simulated.
 
 ## What it does
 

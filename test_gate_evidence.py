@@ -96,7 +96,7 @@ class SetupReadinessTests(unittest.TestCase):
 
     def test_missing_main_and_configured_routes(self):
         setup = importlib.import_module(api.PACKAGE + '.setup')
-        host = dict(delegation=dict(provider='anthropic', model='claude-test'))
+        host = dict(fallback_providers=[dict(provider='anthropic', model='claude-test')])
         with tempfile.TemporaryDirectory() as tmp:
             gates = self.gates(tmp, host)
             self.assertFalse(setup.actions(gates)['can_arm'])
@@ -345,7 +345,8 @@ class SetupArmingApiTests(unittest.TestCase):
         from hermes_cli.config import load_config_readonly
         with tempfile.TemporaryDirectory() as tmp:
             host = dict(model=dict(provider='openai', default='gpt-test'),
-                        delegation=dict(backend='default', provider='anthropic', model='claude-test'))
+                        delegation=dict(backend='default'),
+                        fallback_providers=[dict(provider='anthropic', model='claude-test')])
             (Path(tmp) / 'config.yaml').write_text(json.dumps(host))
             with patch.dict(os.environ, HERMES_HOME=tmp, HERMES_KANBAN_HOME=tmp):
                 from hermes_cli.plugins import PluginContext, PluginManifest, get_plugin_manager

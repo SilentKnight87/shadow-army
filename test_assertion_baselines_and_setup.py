@@ -257,7 +257,7 @@ class AssertionBaselineAndSetupTests(unittest.TestCase):
         save = unittest.mock.Mock()
         setup.register_context(self.gates, SimpleNamespace(set_config=save))
         self.host['model'] = dict(provider='openai', default='gpt-test')
-        self.host['delegation'].update(provider='https://user@example.test', model='claude-test')
+        self.host['fallback_providers'] = [dict(provider='https://user@example.test', model='claude-test')]
         setup.arm(self.gates, 'https://user@example.test', 'claude-test')
         self.assertEqual(save.call_args_list[0].args, ('verifier_provider', 'https://user@example.test'))
     def test_trial_finishes_with_remote_profile_and_checks_once(self):
