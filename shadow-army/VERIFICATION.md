@@ -30,8 +30,8 @@ It clears inherited environment variables and sets `HOME`, `HERMES_HOME`, and
 directory on success or failure. No live app is restarted.
 
 The public repository's push and pull-request workflow runs this same command with read-only
-permissions and a pinned checkout action. It cannot run until the repository is public;
-local results are not evidence of a GitHub Actions run.
+permissions and a pinned checkout action. Its runs are listed at
+https://github.com/SilentKnight87/shadow-army/actions; local results are not evidence of a GitHub Actions run.
 
 Model requests, response identities, and child lifecycle hooks are synthetic. Terminal
 commands run locally; the remote-scope test feeds a synthetic result after the real pre-tool

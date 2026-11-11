@@ -117,7 +117,7 @@ Done and archived cards retain the gate recorded at completion. Their worktrees 
 | --- | --- | --- |
 | `army_gate(card, board?)` | tool | Reads the current gate state and setup hint. |
 | `army_verdict(card, verdict, findings, board?)` | tool | Records a bound verifier's PASS or FAIL. |
-| `pre_tool_call` | hook | Gates `kanban_complete`, binds `delegate_task` tasks when delegation uses shadow-army, and records terminal starts. |
+| `pre_tool_call` | hook | Gates `kanban_complete`, binds `delegate_task` tasks when delegation uses shadow-army, and records terminal starts, and asks for approval before publishing unreviewed code. |
 | `post_tool_call` | hook | Records terminal results and delegation outcomes, and records `closed` after a successful completion. |
 | `subagent_start`, `subagent_stop` | hooks | Bind and release verifier children. |
 | `pre_api_request`, `post_api_request` | hooks | Observe the provider, model and response model of each session. |
@@ -234,3 +234,14 @@ changes to later arguments appear as changed assertions. Whitespace is normalize
 comparison. Quoted brackets and Python line comments are ignored for balance. This is a
 bounded heuristic, not a parser for each language; complex strings, macros, comment syntax,
 and statements longer than twelve lines may be incomplete. It remains advisory.
+
+### Publish approval
+
+With the gate armed, `guard_push` (default `true`) asks for approval before an agent terminal runs
+`git push` or `gh pr create` without a fresh independent PASS for that Git folder, current tree,
+and configured check. Card and card-free workspace receipts both count. An older or expired PASS
+shows STALE; no review shows UNVERIFIED. Approval lets the user proceed anyway.
+This is a heuristic on command text, including environment prefixes, `git -C`, short `cd`,
+`&&` or `;` chains, and a trailing redirect or pipe such as `2>&1 | tail`. A subshell or a here-document is not read. An alias or a script bypasses it. Fetch, pull, `push --dry-run` and quoted
+mentions do not ask. Unknown folders, remote terminals, inspection errors, timeouts and oversized
+repositories pass through. This adds an approval request, never a block directive or a sandbox.

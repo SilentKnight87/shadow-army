@@ -71,7 +71,9 @@ def register_backend(ctx):
                     return None
                 return {'action': 'modify', 'args': {'tasks': gates.prepare(args['tasks'], session_id)}}
             if tool_name == 'terminal':
-                return gates.terminal_start(session_id, tool_call_id, args)
+                approval = gates.publish_decision(args)
+                observed = gates.terminal_start(session_id, tool_call_id, args)
+                return approval or observed
         except Exception as exc:
             if tool_name == 'terminal':
                 return None

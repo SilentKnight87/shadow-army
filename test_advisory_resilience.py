@@ -104,6 +104,20 @@ class AdvisoryResilienceTests(unittest.TestCase):
             self.assertIn('.toBe(0)', jsrows[1]['text'])
             self.assertEqual(len([r for r in rows if r['file'] == rust.name]), 1)
 
+    def test_a_reviewed_card_does_not_claim_the_scan_was_unavailable(self):
+        self.prepare()
+        test_review_evidence.ReviewEvidenceTests.verdict(self)
+        # A receipt written by an earlier version of the plugin has no skipped-test fields.
+        with self.gates.store.transaction() as db:
+            rows = self.gates.store.rows(db, 'receipt')
+            self.assertTrue(rows)
+            for row in rows:
+                self.gates.store.put(db, 'receipt', row['id'], {k: v for k, v in row.items() if k not in ('skipped', 'skipped_count', 'tests_ran')})
+        for _ in range(2):
+            gate = self.card()['gate']
+            self.assertEqual(gate['state'], 'PASS')
+            self.assertFalse([k for k in ('weakened_count', 'skipped_count') if k in gate and gate[k] is None], gate)
+
     def test_unavailable_scan_is_explicit_in_verifier_brief_and_pane_data(self):
         message = 'Test scan unavailable: review the test diff by hand'
         for inventory in (None, []):

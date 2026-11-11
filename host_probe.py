@@ -85,7 +85,9 @@ class HostProbe(unittest.TestCase):
         self.assertTrue(loaded.enabled)
         self.assertIsNone(loaded.error)
         schema = loaded.manifest.config_schema
-        self.assertEqual(set(schema), {'verifier_route', 'verifier_provider', 'verifier_model', 'verifier_fallbacks', 'family_overrides', 'check', 'pass_lifetime_minutes', 'repo'})
+        self.assertEqual(set(schema), {'verifier_route', 'verifier_provider', 'verifier_model', 'verifier_fallbacks', 'family_overrides', 'check', 'pass_lifetime_minutes', 'repo', 'guard_push'})
+        self.assertEqual(schema['guard_push']['type'], 'bool')
+        self.assertIs(schema['guard_push']['default'], True)
         self.assertEqual(schema['verifier_fallbacks']['type'], 'list')
         self.assertEqual(schema['family_overrides']['type'], 'dict')
         self.assertEqual(schema['check']['default'], 'python3 -m unittest discover -s tests')
@@ -105,6 +107,30 @@ class HostProbe(unittest.TestCase):
             (self.home / 'config.yaml').write_text(yaml.safe_dump(self.config))
         self.assertEqual(self.gates.config()['max_age_s'], 3600)
         self.assertEqual(self.gates.config()['verifier'], original['verifier'])
+
+    def test_00_publish_guard_real_pre_tool_dispatch(self):
+        import tempfile
+        from hermes_cli.plugins import get_pre_tool_call_directive
+        with tempfile.TemporaryDirectory(prefix='publish-guard-', dir=self.home) as tmp:
+            repo = Path(tmp)
+            subprocess.check_output(['git', '-C', tmp, 'init'], stderr=subprocess.STDOUT)
+            (repo / 'code.txt').write_text('unreviewed synthetic code\n')
+            subprocess.check_output(['git', '-C', tmp, 'add', '.'], stderr=subprocess.STDOUT)
+            subprocess.check_output(['git', '-C', tmp, '-c', 'user.name=Probe', '-c',
+                                     'user.email=probe@example.invalid', '-c', 'commit.gpgsign=false',
+                                     'commit', '-m', 'seed'], stderr=subprocess.STDOUT)
+            args = dict(command='git push', workdir=tmp)
+            with patch.object(self.gates, 'terminal_start', wraps=self.gates.terminal_start) as observed:
+                action, message = get_pre_tool_call_directive('terminal', args, session_id='publish-probe')
+                self.assertEqual(action, 'approve')
+                self.assertIn('(UNVERIFIED)', message)
+                observed.assert_called_once()
+            raw = self.invoke('pre_tool_call', tool_name='terminal', args=args, session_id='publish-probe')
+            self.assertTrue(any(isinstance(r, dict) and r.get('action') == 'approve'
+                                and r.get('rule_key') == 'shadow-army:publish-unreviewed' for r in raw))
+            action, message = get_pre_tool_call_directive('terminal', dict(args, command='git status'), session_id='publish-probe')
+            self.assertIsNone(action)
+            self.assertIsNone(message)
 
     def test_01_dispatch_gate_and_observed_terminal(self):
         from tools.delegate_tool_routes import _route_one

@@ -34,3 +34,10 @@ passed that exact code. `prompts/` holds what was sent; `ledger-events.json` is 
 
 One small repository with a one-line bug, two runs. It demonstrates the mechanism. It does not measure how often
 a model takes this shortcut unprompted.
+
+## A review with no Kanban card (`workspace/`)
+
+The same day, a `gpt-6-luna` session was asked to verify its Git folder with no card. `request-that-worked.txt` is
+the request that started a review; `request-that-did-not-work.txt` is the shorter one that did not (the agent asked
+for a card id). A `claude-opus-5-5` verifier recorded PASS in 26 seconds; one edited line made the receipt STALE and
+restoring it brought the PASS back. `ACCOUNT.md` is the two-line account.

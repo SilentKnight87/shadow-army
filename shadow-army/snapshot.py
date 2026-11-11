@@ -224,6 +224,8 @@ def snapshot(real, demo=False):
             'STALE': 'Ask for a new independent review of the current code and check.',
             'PASS': 'Nothing to do. The card can close.',
         }[status['state']]
+        if key.board == 'workspace:' and status['state'] == 'PASS':
+            hint = 'Nothing to do. This code has a fresh independent PASS.'
         if raw.get('status') in ('done', 'archived'):
             hint = 'Nothing to do. The card is closed.'
         elif status['state'] == 'UNGATED':
@@ -235,8 +237,11 @@ def snapshot(real, demo=False):
             needs_you=raw.get('status') == 'blocked' or needs_decision,
             decision=boards.clean(decision[len('NEEDS_DECISION'):].lstrip(': \n')) if needs_decision else '',
             gate=dict(state=status['state'], reason=boards.clean(reason) or 'The code identity could not be read; restore repository access and retry.', tree=(status['tree'] or '')[:12] or None,
-                tests_ran=status.get('tests_ran'), skipped=weakened_view(status.get('skipped')), skipped_count=status.get('skipped_count'),
-                weakened=weakened_view(status.get('weakened')), weakened_count=status.get('weakened_count'), changed_count=status.get('changed_count'),
+                tests_ran=status.get('tests_ran'), skipped=weakened_view(status.get('skipped')),
+                weakened=weakened_view(status.get('weakened')), changed_count=status.get('changed_count'),
+                # A count that is present and None means the scan could not run. A count that is absent (an older
+                # receipt, or a card that was never scanned) makes no claim either way.
+                **{k: status[k] for k in ('weakened_count', 'skipped_count') if k in status},
                 age_s=max(0, int(time.time() - latest['created_at'])) if latest else None,
                 builder={k: boards.clean(builder.get(k)) for k in ('family', 'model')} if builder else None,
                 verifier=dict(family=boards.clean(verifier.get('family')), model=boards.clean(verifier.get('response_model') or verifier.get('model'))) if verifier else None),

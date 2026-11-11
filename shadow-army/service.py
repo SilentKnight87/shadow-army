@@ -6,6 +6,7 @@ import hashlib
 import os
 import re
 import sqlite3
+import shlex
 from pathlib import Path
 import time
 import uuid
@@ -18,6 +19,76 @@ ROUTE_CAP = 16
 ASSERTION_CACHE = {}
 SETTING_DEFAULTS = {'repo': None, 'check': 'python3 -m unittest discover -s tests',
                     'verifier': None, 'family_overrides': {}, 'max_age_s': 3600}
+
+
+def publish_targets(command, cwd):
+    """Heuristically locate ordinary publish commands; never evaluate shell text."""
+    if not isinstance(command, str) or len(command) > 16384 or '\n' in command:
+        return []
+    # Keep operators distinct from quoted/escaped words before unquoting each word.
+    pattern = r"""(?:[^\s;&|<>()'"\\]|\\.|"(?:[^"\\]|\\.)*"|'[^']*')+|&&|[;&|<>()]+"""
+    segments = [[]]
+    end = 0
+    for match in re.finditer(pattern, command):
+        if command[end:match.start()].strip():
+            return []
+        end = match.end()
+        raw = match.group()
+        if raw.startswith('#'):
+            return []
+        if raw in ('&&', ';', '|', '||', '&'):
+            segments.append([])
+        elif raw[0] in ';&|<>()':
+            # A redirection (2>&1, > file) does not change what the command is; its words are harmless extras.
+            if set(raw) <= set('<>&') and ('<' in raw or '>' in raw) and '<<' not in raw:
+                continue
+            return []
+        else:
+            try:
+                segments[-1].extend(shlex.split(raw))
+            except ValueError:
+                return []
+    if command[end:].strip() or sum(map(len, segments)) > 512:
+        return []
+    if len(segments) > 32:
+        return []
+    targets = []
+    for words in segments:
+        words = list(words)
+        if words[:1] == ['env']:
+            words.pop(0)
+        while words and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', words[0], re.S):
+            words.pop(0)
+        if not words:
+            continue
+        if words[0] == 'cd':
+            directory = words[1:] if words[1:2] != ['--'] else words[2:]
+            if len(directory) != 1 or any(c in directory[0] for c in '$`'):
+                cwd = None
+            else:
+                path = Path(directory[0]).expanduser()
+                cwd = str(path if path.is_absolute() else Path(cwd) / path) if cwd or path.is_absolute() else None
+            continue
+        tool = words.pop(0)
+        folder = cwd
+        if tool == 'git':
+            while words and words[0].startswith('-'):
+                option = words.pop(0)
+                if option in ('-C', '-c') and words:
+                    value = words.pop(0)
+                    if option == '-C':
+                        if any(c in value for c in '$`'):
+                            folder = None
+                        else:
+                            path = Path(value).expanduser()
+                            folder = str(path if path.is_absolute() else Path(folder) / path) if folder or path.is_absolute() else None
+                elif option not in ('--no-pager', '--no-optional-locks'):
+                    words = []
+            if words[:1] == ['push'] and not any(w in ('--dry-run', '-n') for w in words[1:]):
+                targets.append(folder)
+        elif tool == 'gh' and words[:2] == ['pr', 'create']:
+            targets.append(folder)
+    return list(dict.fromkeys(targets))
 
 
 class Gates:
@@ -187,7 +258,7 @@ class Gates:
         if advisory:
             latest = receipts[-1] if receipts else None
             if latest and latest['tree'] == tree and result['state'] in ('PASS', 'BLOCKED'):
-                result.update({k: latest.get(k) for k in ('weakened', 'weakened_count', 'changed_count', 'skipped', 'skipped_count', 'tests_ran')})
+                result.update({k: latest[k] for k in ('weakened', 'weakened_count', 'changed_count', 'skipped', 'skipped_count', 'tests_ran') if k in latest})
             else:
                 result.update(self.evidence(key, tree=tree))
         result.update(receipts=[{k: r[k] for k in ('verdict', 'tree', 'created_at', 'findings', 'synthetic')} for r in receipts],
@@ -647,6 +718,62 @@ class Gates:
                     self.event(db, GateKey(b['board'], b['card_id']), 'finished',
                                **{'duty': b['duty'], 'tree': b['tree'], 'family': latest.get('response_family') or latest.get('family'),
                                   'model': latest.get('response_model') or latest.get('model')}, **evidence)
+
+    def publish_decision(self, args):
+        """Read-only approval advice. Unknown or failed inspection always passes through."""
+        try:
+            if not publish_targets(args.get('command'), None):
+                return None
+            if self.settings('guard_push', True) is not True or not self.armed() or not self.local_terminal():
+                return None
+            deadline = time.monotonic() + 3
+            scope = next((v for var, v in copy_context().items() if var.name == 'hermes_terminal_scope'), None)
+            session_cwd = next((v for var, v in copy_context().items() if var.name == 'HERMES_SESSION_CWD'), None)
+            cfg = self.config()
+            explicit = args.get('workdir')
+            candidates = (explicit,) if explicit else (
+                session_cwd, scope.get('TERMINAL_CWD') if scope is not None else os.environ.get('TERMINAL_CWD'),
+                self.host_config().get('terminal', {}).get('cwd'), cfg['repo'])
+            cwd = next((str(Path(v).expanduser()) for v in candidates
+                        if isinstance(v, str) and v.strip().lower() not in ('', '.', './', 'auto', 'cwd')
+                        and Path(v).expanduser().is_absolute()
+                        and (Path(v).expanduser().is_dir() if explicit else boards.in_work_tree(str(Path(v).expanduser())))), None)
+            targets = publish_targets(args.get('command'), cwd)
+            if not targets or None in targets or len(targets) > 8:
+                return None
+            with self.store.read() as db:
+                receipts = self.store.rows(db, 'receipt')
+            if len(receipts) > 512:
+                return None
+            card_keys = {(r['board'], r['card_id']) for r in receipts if r['board'] != 'workspace:'}
+            states = []
+            for folder in targets:
+                if not boards.in_work_tree(folder):
+                    return None
+                root = os.fsdecode(git(folder, 'rev-parse', '--show-toplevel')).strip()
+                keys = {GateKey('workspace:', hashlib.sha256(os.fsencode(root)).hexdigest()[:12]).values()}
+                for values in card_keys:
+                    if time.monotonic() > deadline:
+                        return None
+                    key = GateKey(*values)
+                    if not boards.card_row(key):
+                        continue
+                    repo = boards.repository(key, cfg)
+                    if repo and os.fsdecode(git(repo, 'rev-parse', '--show-toplevel')).strip() == root:
+                        keys.add(key.values())
+                relevant = [r for r in receipts if (r['board'], r['card_id']) in keys]
+                result = state(relevant, fingerprint(root), time.time(), cfg)
+                if time.monotonic() > deadline:
+                    return None
+                states.append(result.state)
+            if all(s == 'PASS' for s in states):
+                return None
+            status = 'STALE' if 'STALE' in states else 'BLOCKED' if 'BLOCKED' in states else 'UNVERIFIED'
+            return dict(action='approve', rule_key='shadow-army:publish-unreviewed', message=(
+                'Shadow Army: this code has no fresh independent PASS (' + status + '). '
+                'Approve to push anyway, or ask the agent to verify this workspace with Shadow Army first.'))
+        except Exception:
+            return None
 
     def terminal_start(self, session, call_id, args):
         with self.store.read() as db:

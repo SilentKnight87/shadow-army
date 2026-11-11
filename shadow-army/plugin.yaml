@@ -9,6 +9,11 @@ provides_middleware: []
 requires_env: []
 capabilities: []
 config_schema:
+  guard_push:
+    type: bool
+    default: true
+    label: Ask before publishing unreviewed code
+    description: Ask for approval before terminal git push or gh pr create without a fresh independent PASS when the gate is armed.
   verifier_route:
     type: dict
     label: Saved verifier route
