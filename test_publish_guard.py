@@ -35,6 +35,8 @@ class PublishMatcherTests(unittest.TestCase):
             ('gh pr create --fill 2>&1 | cat', ['/repo']),
             ('git add -A && git commit -m "x" && git push 2>&1', ['/repo']),
             ('git status || git push', ['/repo']),
+            ('git commit -m "x"\ngit push', ['/repo']),
+            ('cd child\ngit push 2>&1', ['/repo/child']),
         ]:
             with self.subTest(command=command):
                 self.assertEqual(publish_targets(command, '/repo'), expected)
@@ -46,7 +48,7 @@ class PublishMatcherTests(unittest.TestCase):
                         './publish.sh', 'bash publish.sh', 'python publish.py',
                         '# git push', 'echo hi # words; git push',
                         'echo "unterminated', 'git status | cat', 'echo hi | grep push', 'git log | grep "git push"',
-                        'git stash push', 'cat notes > push', 'echo git push > out.txt', '(git push)', 'git push <<EOF', '', ' ']:
+                        'git stash push', 'cat notes > push', 'echo git push > out.txt', '(git push)', 'git push <<EOF', 'echo "a\ngit push"', 'cat <<EOF\ngit push\nEOF', 'git status\ngit fetch', '', ' ']:
             with self.subTest(command=command):
                 self.assertEqual(publish_targets(command, '/repo'), [])
         self.assertEqual(publish_targets('x' * 16385, '/repo'), [])

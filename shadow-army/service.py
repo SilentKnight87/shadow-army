@@ -23,10 +23,10 @@ SETTING_DEFAULTS = {'repo': None, 'check': 'python3 -m unittest discover -s test
 
 def publish_targets(command, cwd):
     """Heuristically locate ordinary publish commands; never evaluate shell text."""
-    if not isinstance(command, str) or len(command) > 16384 or '\n' in command:
+    if not isinstance(command, str) or len(command) > 16384:
         return []
     # Keep operators distinct from quoted/escaped words before unquoting each word.
-    pattern = r"""(?:[^\s;&|<>()'"\\]|\\.|"(?:[^"\\]|\\.)*"|'[^']*')+|&&|[;&|<>()]+"""
+    pattern = r"""(?:[^\s;&|<>()'"\\]|\\.|"(?:[^"\\]|\\.)*"|'[^']*')+|&&|\n+|[;&|<>()]+"""
     segments = [[]]
     end = 0
     for match in re.finditer(pattern, command):
@@ -36,7 +36,8 @@ def publish_targets(command, cwd):
         raw = match.group()
         if raw.startswith('#'):
             return []
-        if raw in ('&&', ';', '|', '||', '&'):
+        if raw in ('&&', ';', '|', '||', '&') or raw[0] == '\n':
+            # A new line starts a new command, like a semicolon.
             segments.append([])
         elif raw[0] in ';&|<>()':
             # A redirection (2>&1, > file) does not change what the command is; its words are harmless extras.
@@ -584,7 +585,7 @@ class Gates:
                     task.pop('board', None)
                 task['goal'] = MARKER.sub('', str(task.get('goal', ''))) + '\n[shadow-army:' + nonce + ']'
                 if duty == 'verify':
-                    task['goal'] += f'\nVerify card {key.card_id} on board {key.board} in repository {repo}. Run exactly: {cfg["check"] or "(no check configured)"}. Use terminal directly with workdir set to {repo}, then call army_verdict directly for this card.'
+                    task['goal'] += f'\nVerify card {key.card_id} on board {key.board} in repository {repo}. Run exactly: {cfg["check"] or "(no check configured)"}. Use terminal directly with workdir set to {repo}, then call army_verdict directly for this card. Green tests alone do not establish correctness: assess any removed or switched-off test against the requirement.'
                     description = assertions.summary(evidence)
                     if description:
                         task['goal'] += '\n' + description + ' (advisory; review intent): ' + json.dumps(evidence)
@@ -743,8 +744,7 @@ class Gates:
                 return None
             with self.store.read() as db:
                 receipts = self.store.rows(db, 'receipt')
-            if len(receipts) > 512:
-                return None
+            receipts = receipts[-512:]  # the most recent; an old store must not switch the guard off
             card_keys = {(r['board'], r['card_id']) for r in receipts if r['board'] != 'workspace:'}
             states = []
             for folder in targets:

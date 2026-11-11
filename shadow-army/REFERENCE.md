@@ -77,6 +77,7 @@ Open **Settings → Plugins → Shadow Army** (or the gear on its Capabilities �
 | `verifier.fallbacks` | `[]` | Optional alternative routes, considered in order before dispatch. |
 | `family_overrides` | `{}` | Exact lower-case `provider/model` keys mapped to a family name in `policy.py`. |
 | `max_age_s` | `3600` | Seconds a PASS stays fresh. |
+| `guard_push` | `true` | With the gate armed, ask before a terminal `git push` or `gh pr create` on code without a fresh PASS. |
 | `repo` | none | Optional. Gates scratch cards and `dir` cards outside a work tree against one repository. |
 
 The gate is armed only when verifier.provider/model are configured and delegation.backend is shadow-army. Otherwise repository cards are NOT ARMED and completion passes through normally. A check command is expected by default. Explicitly setting `check: ""` disables command evidence. It also invalidates prior receipts.
@@ -242,6 +243,6 @@ With the gate armed, `guard_push` (default `true`) asks for approval before an a
 and configured check. Card and card-free workspace receipts both count. An older or expired PASS
 shows STALE; no review shows UNVERIFIED. Approval lets the user proceed anyway.
 This is a heuristic on command text, including environment prefixes, `git -C`, short `cd`,
-`&&` or `;` chains, and a trailing redirect or pipe such as `2>&1 | tail`. A subshell or a here-document is not read. An alias or a script bypasses it. Fetch, pull, `push --dry-run` and quoted
+`&&` or `;` chains, separate lines, and a trailing redirect or pipe such as `2>&1 | tail`. A subshell or a here-document is not read. Only the 512 most recent receipts are consulted. An alias or a script bypasses it. Fetch, pull, `push --dry-run` and quoted
 mentions do not ask. Unknown folders, remote terminals, inspection errors, timeouts and oversized
 repositories pass through. This adds an approval request, never a block directive or a sandbox.

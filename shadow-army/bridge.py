@@ -36,7 +36,7 @@ class Army(DelegationProvider):
 
     def task_parameters(self, config):
         return {'duty': {'type': 'string', 'enum': ['build', 'verify', 'repair'], 'description': 'Verifier requires independent route and observed check.'},
-                'card': {'type': 'string', 'description': 'Kanban card id to build or verify.'},
+                'card': {'type': 'string', 'description': 'Kanban card id to build or verify. Omit it with duty="verify" to review the current Git workspace with no card.'},
                 'board': {'type': 'string', 'description': 'Board name when card ids are ambiguous.'}}
 
     def route_task(self, task, config):

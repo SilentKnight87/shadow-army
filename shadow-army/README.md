@@ -58,7 +58,7 @@ The prompts, the plugin's brief to each child, every tool call the coordinator m
 
 ## Who it is for, and what it costs
 
-- **For:** anyone who lets a Hermes agent write code and close its own Kanban cards. With no board, ask the agent to "use the verify-loop skill to verify this workspace with Shadow Army": the same cross-family review runs on any Git folder, as a report that blocks nothing.
+- **For:** anyone who lets a Hermes agent write code and close its own Kanban cards. With no board, ask the agent to "use the verify-loop skill to verify this workspace with Shadow Army": the same cross-family review runs on any Git folder. The review is a report; the push guard is what acts on it.
 - **No board?** Arm the gate and the agent's `git push` asks you first, unless another family has passed this exact code.
 - **Needs:** two model families configured in Hermes (an OpenAI builder and an Anthropic verifier, for example), Git and a local terminal.
 - **Costs:** one extra review per close. In the run above the two reviews took 11 and 9 seconds from the verifier's start to its verdict (19.0 and 16.6 seconds for the whole verifier child), and the two verifier children used 36,795 and 45,085 tokens in all. Two small runs do not predict the cost on a large project.
@@ -121,7 +121,7 @@ Each row has a test in the suite. The scan reads common test syntax in Python, J
 
 ![Six seconds of the demo film: after a PASS, one edited line cracks the seal to STALE and the agent's close is refused again. From the trial, simulated models.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-loop.gif)
 
-**5. It asks before unreviewed code is published.** Once the gate is armed, when the agent's terminal is about to run `git push` or `gh pr create` on code with no fresh independent PASS, Hermes asks you to approve first: "Shadow Army: this code has no fresh independent PASS (UNVERIFIED)." With a fresh PASS, from a card or from a card-free review, the push goes straight through. It never blocks: you can approve, and the `guard_push` setting turns it off. It checks the folder's current code, not what a particular branch or tag would send. It is a best-effort check: unknown folders, multi-line commands, subshells and other shell syntax it cannot read, remote terminals, errors, timeouts and oversized repositories pass through without the prompt. It is covered by 15 focused tests and a host test through Hermes's real plugin manager.
+**5. It asks before unreviewed code is published.** Once the gate is armed, when the agent's terminal is about to run `git push` or `gh pr create` on code with no fresh independent PASS, Hermes asks you to approve first: "Shadow Army: this code has no fresh independent PASS (UNVERIFIED)." With a fresh PASS, from a card or from a card-free review, the push goes straight through. It never blocks: you can approve, and the `guard_push` setting turns it off. It checks the folder's current code, not what a particular branch or tag would send. It is a best-effort check: unknown folders, subshells, here-documents and other shell syntax it cannot read, remote terminals, errors, timeouts and oversized repositories pass through without the prompt. It is covered by 15 focused tests and a host test through Hermes's real plugin manager.
 
 ## Why this is a plugin, not a prompt
 
