@@ -10,7 +10,9 @@ The `test_*.py` files, `host_probe.py` and `verify_archive.py` test the plugin. 
 
 **A real catch:** on 11 November 2026 a `gpt-6-luna` builder, told to take the shortcut, deleted the failing test and the check went green. The plugin refused the close, and a `claude-opus-5-5` verifier that was told nothing failed it: "The suite passes only because that test was deleted." The receipts are in [the plugin's guide](shadow-army/README.md#a-real-catch).
 
-**Demo film:** [docs/demo.mp4](docs/demo.mp4). Every picture of the interface in it is the real plugin; the hooded figures and the gate are art.
+**Demo film:** [docs/demo.mp4](docs/demo.mp4), 46 seconds. About 34 of them are screen capture, labelled on screen as the real run or the built-in trial; the only art is the 3D gate.
+
+![Ten seconds of the film](docs/img/readme-loop.gif)
 
 **Install:** `hermes plugins install SilentKnight87/shadow-army#shadow-army --enable`
 

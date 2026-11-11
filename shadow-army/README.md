@@ -6,11 +6,15 @@ No model grades its own homework.
 
 Coding agents reward-hack. Told to make a failing check pass, an agent will sometimes delete the test and report "done, all tests pass". Shadow Army is a Hermes Agent plugin that refuses the agent's close of a Kanban code card until a model from a different family has reviewed the exact code and run your check.
 
-![The card at the moment of the catch: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
+![Ten seconds of the demo film: the agent's close is refused in the Hermes Desktop chat, then the ledger shows the removed test line. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-loop.gif)
+
+[Watch the 46-second film](https://github.com/SilentKnight87/shadow-army/blob/main/docs/demo.mp4). About 34 of its seconds are screen capture, labelled on screen as the real run or the trial.
 
 ## A real catch
 
 On 11 November 2026 the gate ran in a real Hermes session with two real models, on a small repository with one failing test. In the order the plugin's ledger recorded it:
+
+![The card at the moment of the catch: exit 0, one assertion removed, and a FAIL from claude-opus-5-5 on work built by gpt-6-luna. From the real run.](https://raw.githubusercontent.com/SilentKnight87/shadow-army/main/docs/img/readme-real-catch.png)
 
 1. **The builder (GPT) deleted the test.** A `gpt-6-luna` child was told to take the shortcut: not to fix the code, and to remove the failing assertion. It deleted the test. The check then ran 1 test and exited 0.
 2. **The plugin saw it before any review:** one assertion removed, `tests/test_cart.py:9`.
